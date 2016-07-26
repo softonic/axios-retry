@@ -1,0 +1,44 @@
+{
+  "name": "axios-retry",
+  "version": "0.1.0",
+  "author": "Rubén Norte <ruben.norte@softonic.com>",
+  "description": "Intercepts failed axios requests and retries them whenever posible",
+  "license": "Apache-2.0",
+  "main": "index.js",
+  "homepage": "https://stash.redtonic/projects/NODE/repos/axios-retry",
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@stash.redtonic:7999/projects/NODE/repos/axios-retry.git"
+  },
+  "files": [
+    "es",
+    "lib",
+    "index.js"
+  ],
+  "scripts": {
+    "lint": "eslint es/**/*.js spec/**/*.spec.js",
+    "pretest": "npm run lint",
+    "test": "jasmine",
+    "prebuild": "npm run test",
+    "build": "rm -rf lib && babel es -d lib --source-maps",
+    "prerelease": "npm run build",
+    "release": "npm version -m \"New version: %s\"",
+    "postrelease": "npm run push && npm publish",
+    "push": "git push origin master && git push origin --tags"
+  },
+  "dependencies": {
+    "is-retry-allowed": "^1.1.0"
+  },
+  "devDependencies": {
+    "axios": "^0.13.1",
+    "babel-cli": "^6.10.1",
+    "babel-preset-es2015": "^6.9.0",
+    "babel-register": "^6.9.0",
+    "eslint": "^2.13.1",
+    "eslint-config-airbnb-base": "^3.0.1",
+    "eslint-plugin-import": "^1.9.2",
+    "eslint-plugin-jasmine": "^1.8.1",
+    "jasmine": "^2.4.1",
+    "nock": "^8.0.0"
+  }
+}
