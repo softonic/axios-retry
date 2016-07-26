@@ -1,0 +1,37 @@
+{
+  "extends": [
+    "airbnb-base",
+    "plugin:jasmine/recommended"
+  ],
+  "plugins": [
+    "jasmine"
+  ],
+  "rules": {
+    // Jasmine
+    "jasmine/no-spec-dupes": ["warn", "branch"],
+    "jasmine/no-suite-dupes":  ["warn", "branch"],
+
+    // Best practices
+    "valid-jsdoc": ["warn", {
+      "requireReturn": false,
+      "requireParamDescription": false,
+      "requireReturnDescription": false,
+      "prefer": {
+        "returns": "return",
+        "params": "param"
+      }
+    }],
+    "complexity": ["warn", 7], // Warn about excessive complexity
+    "no-param-reassign": ["error", { "props": false }], // To enable request.params.something = ...;
+    "no-underscore-dangle": ["error", { "allowAfterThis": true }], // To enable this._p = 'value';
+
+    // Style
+    "object-shorthand": ["error", "always", { "avoidQuotes": true }],
+    "quote-props": ["error", "consistent"], // All quotes or no quotes in a single object
+    "comma-dangle": ["warn", "never"], // Disallow trailing comma in the last element of a list
+    "padded-blocks": "off", // Allow spaces at the beginning of blocks
+    "newline-per-chained-call": "off", // Allow chaining in a single line: Joi.string().required()
+    "consistent-return": "off", // Allow if (error) { return ... } and no final return
+    "arrow-body-style": "off" // Allow arrow functions with only a return statement
+  }
+}
