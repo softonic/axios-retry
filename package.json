@@ -1,6 +1,6 @@
 {
   "name": "axios-retry",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": "Rubén Norte <ruben.norte@softonic.com>",
   "description": "Intercepts failed axios requests and retries them whenever posible",
   "license": "Apache-2.0",
