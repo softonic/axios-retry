@@ -46,6 +46,12 @@ export default function axiosRetry(axios, { retries = 3 } = {}) {
       if (axios.defaults.agent === config.agent) {
         delete config.agent;
       }
+      if (axios.defaults.httpAgent === config.httpAgent) {
+        delete config.httpAgent;
+      }
+      if (axios.defaults.httpsAgent === config.httpsAgent) {
+        delete config.httpsAgent;
+      }
 
       return axios(config);
     }
