@@ -2,14 +2,10 @@
   "name": "axios-retry",
   "version": "1.1.0",
   "author": "Rubén Norte <ruben.norte@softonic.com>",
-  "description": "Intercepts failed axios requests and retries them whenever posible",
+  "description": "Axios plugin that intercepts failed requests and retries them whenever posible.",
   "license": "Apache-2.0",
   "main": "index.js",
-  "homepage": "https://stash.redtonic/projects/NODE/repos/axios-retry",
-  "repository": {
-    "type": "git",
-    "url": "ssh://git@stash.redtonic:7999/projects/NODE/repos/axios-retry.git"
-  },
+  "homepage": "https://github.com/softonic/axios-retry",
   "files": [
     "es",
     "lib",
@@ -40,5 +36,12 @@
     "eslint-plugin-jasmine": "^1.8.1",
     "jasmine": "^2.4.1",
     "nock": "^8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/softonic/axios-retry.git"
+  },
+  "bugs": {
+    "url": "https://github.com/softonic/axios-retry/issues"
   }
 }
