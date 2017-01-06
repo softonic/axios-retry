@@ -58,6 +58,26 @@ describe('axiosRetry(axios, { retries })', () => {
     }, done.fail);
   });
 
+  it('should resolve with a succesful response after an error with custom retries', done => {
+    const client = axios.create();
+    setupResponses(client, [
+      () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+      () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+      () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+    ]);
+
+    axiosRetry(client, { retries: 1 });
+
+    client({
+      url: 'http://example.com/test',
+      method: 'get',
+      retries: 2
+    }).then(result => {
+      expect(result.status).toBe(200);
+      done();
+    }, done.fail);
+  });
+
   it('should resolve with a succesful response after an error (with agent)', done => {
     const httpAgent = new http.Agent();
 
