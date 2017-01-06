@@ -36,9 +36,11 @@ export default function axiosRetry(axios, { retries = 3 } = {}) {
       return Promise.reject(error);
     }
 
+    const maxRetries = config.retries || retries;
+
     config.retryCount = config.retryCount || 0;
 
-    if (!error.response && config.retryCount < retries && isRetryAllowed(error)) {
+    if (!error.response && config.retryCount < maxRetries && isRetryAllowed(error)) {
       config.retryCount++;
 
       // Axios fails merging this configuration to the default configuration because it has an issue
