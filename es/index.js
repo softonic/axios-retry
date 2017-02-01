@@ -38,7 +38,12 @@ export default function axiosRetry(axios, { retries = 3 } = {}) {
 
     config.retryCount = config.retryCount || 0;
 
-    if (!error.response && config.retryCount < retries && isRetryAllowed(error)) {
+    const shouldRetry = !error.response
+      && error.code !== 'ECONNABORTED'
+      && config.retryCount < retries
+      && isRetryAllowed(error);
+
+    if (shouldRetry) {
       config.retryCount++;
 
       // Axios fails merging this configuration to the default configuration because it has an issue

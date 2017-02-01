@@ -170,6 +170,25 @@ describe('axiosRetry(axios, { retries })', () => {
     });
   });
 
+  it('should reject with timed out requests without retrying', done => {
+    const client = axios.create();
+
+    const timeoutError = new Error('Timeout');
+    timeoutError.code = 'ECONNABORTED';
+
+    setupResponses(client, [
+      () => nock('http://example.com').get('/test').replyWithError(timeoutError),
+      () => nock('http://example.com').get('/test').reply(200)
+    ]);
+
+    axiosRetry(client, { retries: 1 });
+
+    client.get('http://example.com/test').then(done.fail, error => {
+      expect(error).toBe(timeoutError);
+      done();
+    });
+  });
+
   it('should reject with errors without a config property without retrying', done => {
     const client = axios.create();
 
