@@ -226,7 +226,7 @@ describe('axiosRetry(axios, { retries, shouldRetry })', () => {
       () => secondRequest
     ]);
 
-    axiosRetry(client, { retries: 1, retryCheck: error => error.response.status === 500 });
+    axiosRetry(client, { retries: 1, retryCondition: error => error.response.status === 500 });
 
     client.get('http://example.com/test').then(done.fail, () => {
       firstRequest.done();
