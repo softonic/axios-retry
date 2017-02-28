@@ -29,7 +29,7 @@ import isRetryAllowed from 'is-retry-allowed';
  */
 export default function axiosRetry(axios, {
   retries = 3,
-  retryCheck = error => !error.response && error.code !== 'ECONNABORTED'
+  retryCondition = error => !error.response
 } = {}) {
   axios.interceptors.response.use(null, error => {
     const config = error.config;
@@ -41,7 +41,8 @@ export default function axiosRetry(axios, {
 
     config.retryCount = config.retryCount || 0;
 
-    const shouldRetry = retryCheck(error)
+    const shouldRetry = retryCondition(error)
+      && error.code !== 'ECONNABORTED'
       && config.retryCount < retries
       && isRetryAllowed(error);
 
