@@ -215,7 +215,7 @@ describe('axiosRetry(axios, { retries, shouldRetry })', () => {
     nock.enableNetConnect();
   });
 
-  it('allows a custom shouldRetry function to determine if it should retry or not', done => {
+  it('allows a custom retryCondition function to determine if it should retry or not', done => {
     const client = axios.create();
 
     const firstRequest = nock('http://example.com').get('/test').reply(500, 'Server Error');
