@@ -208,3 +208,30 @@ describe('axiosRetry(axios, { retries })', () => {
     });
   });
 });
+
+describe('axiosRetry(axios, { retries, shouldRetry })', () => {
+  afterEach(() => {
+    nock.cleanAll();
+    nock.enableNetConnect();
+  });
+
+  it('allows a custom retryCondition function to determine if it should retry or not', done => {
+    const client = axios.create();
+
+    const firstRequest = nock('http://example.com').get('/test').reply(500, 'Server Error');
+    const secondRequest = nock('http://example.com').get('/test').reply(500, 'Server Error');
+
+    setupResponses(client, [
+      () => firstRequest,
+      () => secondRequest
+    ]);
+
+    axiosRetry(client, { retries: 1, retryCondition: error => error.response.status === 500 });
+
+    client.get('http://example.com/test').then(done.fail, () => {
+      firstRequest.done();
+      secondRequest.done();
+      done();
+    });
+  });
+});

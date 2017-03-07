@@ -34,6 +34,13 @@ client.get('/test') // The first request fails and the second returns 'ok'
   });
 ```
 
+## Options
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| retries | `Number` | 3 | The number of times to retry before failing |
+| retryCondition | `Function` | `error => !error.response` | A callback to further control if a request should be retried.  By default, it retries if the result did not have a response. |
+
 ## Testing
 
 Clone the repository and execute:
