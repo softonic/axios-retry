@@ -1,5 +1,13 @@
 import isRetryAllowed from 'is-retry-allowed';
 
+const resolveOrReject = (error, response) => {
+  if (!error) {
+    return Promise.resolve(response);
+  }
+
+  return Promise.reject(error);
+};
+
 /**
  * Adds response interceptors to an axios instance to retry requests failed due to network issues
  *
@@ -27,24 +35,28 @@ import isRetryAllowed from 'is-retry-allowed';
  * @param {Object} [options]
  * @param {number} [options.retries=3] Number of retries
  */
-export default function axiosRetry(axios, {
-  retries = 3,
-  retryCondition = error => !error.response
-} = {}) {
-  axios.interceptors.response.use(null, error => {
-    const config = error.config;
+const axiosRetry = (
+  axios,
+  {
+    retries = 3,
+    // eslint-disable-next-line no-unused-vars
+    retryCondition = (error, response) => error && !error.response
+  } = {}
+) => {
+  const retry = (error = {}, response = {}) => {
+    const config = (error && error.config) || (response && response.config);
 
     // If we have no information to retry the request
     if (!config) {
-      return Promise.reject(error);
+      return resolveOrReject(error, response);
     }
 
     config.retryCount = config.retryCount || 0;
 
-    const shouldRetry = retryCondition(error)
-      && error.code !== 'ECONNABORTED'
-      && config.retryCount < retries
-      && isRetryAllowed(error);
+    const shouldRetry = retryCondition(error, response) &&
+      (error && error.code) !== 'ECONNABORTED' &&
+      config.retryCount < retries &&
+      isRetryAllowed(error);
 
     if (shouldRetry) {
       config.retryCount++;
@@ -64,6 +76,13 @@ export default function axiosRetry(axios, {
       return axios(config);
     }
 
-    return Promise.reject(error);
-  });
-}
+    return resolveOrReject(error, response);
+  };
+
+  axios.interceptors.response.use(
+    (response) => retry(null, response),
+    (error) => retry(error, null)
+  );
+};
+
+export default axiosRetry;

@@ -43,6 +43,28 @@ describe('axiosRetry(axios, { retries })', () => {
     }, done.fail);
   });
 
+  it('should resolve with a succesful response after object with "error" key', done => {
+    const client = axios.create();
+    setupResponses(client, [
+      () => nock('http://example.com').get('/test').reply(200, {
+        error: 'should retry'
+      }),
+      () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+    ]);
+
+    axiosRetry(client, {
+      retries: 1,
+      retryCondition: (err, res) => {
+        return res && !!res.data.error;
+      }
+    });
+
+    client.get('http://example.com/test').then(result => {
+      expect(result.status).toBe(200);
+      done();
+    }, done.fail);
+  });
+
   it('should resolve with a succesful response after an error', done => {
     const client = axios.create();
     setupResponses(client, [
