@@ -43,5 +43,6 @@
   },
   "bugs": {
     "url": "https://github.com/softonic/axios-retry/issues"
-  }
+  },
+  "typings": "./index.d.ts"
 }
