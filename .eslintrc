@@ -21,7 +21,7 @@
         "params": "param"
       }
     }],
-    "complexity": ["warn", 7], // Warn about excessive complexity
+    "complexity": ["warn", 8], // Warn about excessive complexity
     "no-param-reassign": ["error", { "props": false }], // To enable request.params.something = ...;
     "no-underscore-dangle": ["error", { "allowAfterThis": true }], // To enable this._p = 'value';
 
@@ -32,6 +32,7 @@
     "padded-blocks": "off", // Allow spaces at the beginning of blocks
     "newline-per-chained-call": "off", // Allow chaining in a single line: Joi.string().required()
     "consistent-return": "off", // Allow if (error) { return ... } and no final return
-    "arrow-body-style": "off" // Allow arrow functions with only a return statement
+    "arrow-body-style": "off", // Allow arrow functions with only a return statement
+    "max-len": ["error", { "ignoreComments": true }] // Allow 80+ char lines in comments
   }
 }

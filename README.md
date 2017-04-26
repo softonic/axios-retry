@@ -39,7 +39,8 @@ client.get('/test') // The first request fails and the second returns 'ok'
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | retries | `Number` | 3 | The number of times to retry before failing |
-| retryCondition | `Function` | `error => !error.response` | A callback to further control if a request should be retried.  By default, it retries if the result did not have a response. |
+| retryCondition | `Function` | `error => !error.response && error.code !== 'ECONNABORTED'` | A callback to further control if a request should be retried.  By default, it retries if the result did not have a response and the errorcode is not 'ECONNABORTED'. |
+| useIsRetryAllowed | `Boolean` | `true` | use the "is-retry-allowed" module additionally to the `retryCondition` function to determine if the request should be retried |
 
 ## Testing
 

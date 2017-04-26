@@ -1,3 +1,5 @@
+/* eslint max-len: "off" */
+
 import http from 'http';
 import nock from 'nock';
 import axios from 'axios';
@@ -231,6 +233,109 @@ describe('axiosRetry(axios, { retries, shouldRetry })', () => {
     client.get('http://example.com/test').then(done.fail, () => {
       firstRequest.done();
       secondRequest.done();
+      done();
+    });
+  });
+});
+
+describe('axiosRetry(axios, { retries, retryCondition })', () => {
+  afterEach(() => {
+    nock.cleanAll();
+    nock.enableNetConnect();
+  });
+
+  it('allows a custom retryCondition function - retry on ECONNRESET', done => {
+    const client = axios.create();
+
+    const firstRequest = nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR);
+    const secondRequest = nock('http://example.com').get('/test').reply(200);
+
+    setupResponses(client, [
+      () => firstRequest,
+      () => secondRequest
+    ]);
+
+    const retryCondition = (error) => !error.response;
+
+    axiosRetry(client, { retries: 1, retryCondition });
+
+    client.get('http://example.com/test').then(result => {
+      expect(result.status).toBe(200);
+      done();
+    }, done.fail);
+  });
+
+  it('allows a custom retryCondition function - don\'t retry on custom error', done => {
+    const client = axios.create();
+
+    const customError = new Error('Some custom error.');
+    customError.code = 'ECUSTOMERR';
+
+    const firstRequest = nock('http://example.com').get('/test').reply(500, 'Server Error');
+    const secondRequest = nock('http://example.com').get('/test').replyWithError(customError);
+    const thirdRequest = nock('http://example.com').get('/test').reply(200);
+
+    setupResponses(client, [
+      () => firstRequest,
+      () => secondRequest,
+      () => thirdRequest
+    ]);
+
+    const retryCondition = error => error.code !== 'ECUSTOMERR';
+
+    axiosRetry(client, { retries: 2, retryCondition });
+
+    client.get('http://example.com/test').then(done.fail, () => {
+      firstRequest.done();
+      secondRequest.done();
+      done();
+    });
+  });
+});
+
+describe('axiosRetry(axios, { retries, useIsRetryAllowed })', () => {
+  afterEach(() => {
+    nock.cleanAll();
+    nock.enableNetConnect();
+  });
+
+  it('don\'t use the is-retry-allowed module - retry on ENOTFOUND', done => {
+    const client = axios.create();
+
+    const notFoundError = new Error('Ressource not found.');
+    notFoundError.code = 'ENOTFOUND';
+
+    const firstRequest = nock('http://example.com').get('/test').replyWithError(notFoundError);
+    const secondRequest = nock('http://example.com').get('/test').reply(200);
+
+    setupResponses(client, [
+      () => firstRequest,
+      () => secondRequest
+    ]);
+
+    axiosRetry(client, { retries: 1, useIsRetryAllowed: false });
+
+    client.get('http://example.com/test').then(result => {
+      expect(result.status).toBe(200);
+      done();
+    }, done.fail);
+  });
+
+  it('use the is-retry-allowed module - don\'t retry on ENOTFOUND', done => {
+    const client = axios.create();
+
+    const firstRequest = nock('http://example.com').get('/test').reply(404, 'Not found');
+    const secondRequest = nock('http://example.com').get('/test').reply(200);
+
+    setupResponses(client, [
+      () => firstRequest,
+      () => secondRequest
+    ]);
+
+    axiosRetry(client, { retries: 1, useIsRetryAllowed: true });
+
+    client.get('http://example.com/test').then(done.fail, () => {
+      firstRequest.done();
       done();
     });
   });
