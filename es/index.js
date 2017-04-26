@@ -26,10 +26,13 @@ import isRetryAllowed from 'is-retry-allowed';
  * @param {Axios} axios An axios instance (the axios object or one created from axios.create)
  * @param {Object} [options]
  * @param {number} [options.retries=3] Number of retries
+ * @param {number} [options.useIsRetryAllowed=true] ask "is-retry-allowed" if the request error is eliglible to retry it
+ * @param {number} [options.retryCondition=error => !error.response && error.code !== 'ECONNABORTED'] check to determine if we should retry the request
  */
 export default function axiosRetry(axios, {
   retries = 3,
-  retryCondition = error => !error.response
+  useIsRetryAllowed = true,
+  retryCondition = error => !error.response && error.code !== 'ECONNABORTED'
 } = {}) {
   axios.interceptors.response.use(null, error => {
     const config = error.config;
@@ -42,9 +45,8 @@ export default function axiosRetry(axios, {
     config.retryCount = config.retryCount || 0;
 
     const shouldRetry = retryCondition(error)
-      && error.code !== 'ECONNABORTED'
-      && config.retryCount < retries
-      && isRetryAllowed(error);
+      && (useIsRetryAllowed ? isRetryAllowed(error) : true)
+      && config.retryCount < retries;
 
     if (shouldRetry) {
       config.retryCount++;
