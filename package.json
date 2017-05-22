@@ -1,11 +1,11 @@
 {
-  "name": "axios-retry",
+  "name": "axios-retry-fork",
   "version": "1.2.0",
   "author": "Rubén Norte <ruben.norte@softonic.com>",
-  "description": "Axios plugin that intercepts failed requests and retries them whenever posible.",
+  "description": "Axios plugin that intercepts failed requests and retries them whenever possible. FORK: even on timeouts and stuff! :)",
   "license": "Apache-2.0",
   "main": "index.js",
-  "homepage": "https://github.com/softonic/axios-retry",
+  "homepage": "https://github.com/erdii/axios-retry",
   "files": [
     "es",
     "lib",
@@ -39,9 +39,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/softonic/axios-retry.git"
+    "url": "git+https://github.com/erdii/axios-retry.git"
   },
   "bugs": {
-    "url": "https://github.com/softonic/axios-retry/issues"
+    "url": "https://github.com/erdii/axios-retry/issues"
   }
 }
