@@ -189,6 +189,24 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
     });
   });
 
+  it('should use the original timeout across retries', done => {
+    const client = axios.create();
+
+    setupResponses(client, [
+      () => nock('http://example.com').get('/test').delay(50).replyWithError(NETWORK_ERROR),
+      () => nock('http://example.com').get('/test').delay(50).replyWithError(NETWORK_ERROR),
+      () => nock('http://example.com').get('/test').delay(50).replyWithError(NETWORK_ERROR),
+      () => nock('http://example.com').get('/test').reply(200)
+    ]);
+
+    axiosRetry(client, { retries: 3 });
+
+    client.get('http://example.com/test', { timeout: 100 }).then(done.fail, error => {
+      expect(error.code).toBe('ECONNABORTED');
+      done();
+    });
+  });
+
   it('should reject with errors without a config property without retrying', done => {
     const client = axios.create();
 

@@ -116,6 +116,12 @@ export default function axiosRetry(axios, defaultOptions) {
       // with circular structures: https://github.com/mzabriskie/axios/issues/370
       fixConfig(axios, config);
 
+      const now = Date.now();
+      if (config.timeout && currentState.lastRequestTime) {
+        config.timeout -= now - currentState.lastRequestTime;
+      }
+      currentState.lastRequestTime = now;
+
       return axios(config);
     }
 
