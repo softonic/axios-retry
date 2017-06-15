@@ -23,7 +23,7 @@ function setupResponses(client, responses) {
   configureResponse();
 }
 
-describe('axiosRetry(axios, { retries })', () => {
+describe('axiosRetry(axios, { retries, retryCondition })', () => {
   afterEach(() => {
     nock.cleanAll();
     nock.enableNetConnect();
@@ -207,13 +207,6 @@ describe('axiosRetry(axios, { retries })', () => {
       done();
     });
   });
-});
-
-describe('axiosRetry(axios, { retries, shouldRetry })', () => {
-  afterEach(() => {
-    nock.cleanAll();
-    nock.enableNetConnect();
-  });
 
   it('allows a custom retryCondition function to determine if it should retry or not', done => {
     const client = axios.create();
@@ -233,5 +226,26 @@ describe('axiosRetry(axios, { retries, shouldRetry })', () => {
       secondRequest.done();
       done();
     });
+  });
+
+  it('should use request-specific configuration', done => {
+    const client = axios.create();
+
+    setupResponses(client, [
+      () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+      () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+      () => nock('http://example.com').get('/test').reply(200)
+    ]);
+
+    axiosRetry(client, { retries: 0 });
+
+    client.get('http://example.com/test', {
+      'axios-retry': {
+        retries: 2
+      }
+    }).then(result => {
+      expect(result.status).toBe(200);
+      done();
+    }, done.fail);
   });
 });
