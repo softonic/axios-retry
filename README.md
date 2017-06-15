@@ -45,6 +45,8 @@ client
   });
 ```
 
+**Note:** the plugin interprets the request timeout as a global value, so it is not used for each retry but for the whole request lifecycle.
+
 ## Options
 
 | Name | Type | Default | Description |
