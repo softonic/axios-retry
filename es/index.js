@@ -1,7 +1,6 @@
 import isRetryAllowed from 'is-retry-allowed';
-import pkg from '../package.json';
 
-const namespace = pkg.name;
+const namespace = 'axios-retry';
 
 /**
  * @param  {Error}  error
