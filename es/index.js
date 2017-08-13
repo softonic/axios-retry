@@ -8,7 +8,7 @@ const namespace = 'axios-retry';
  */
 export function isNetworkError(error) {
   return !error.response
-    && error.code !== undefined // Prevents retrying cancelled requests
+    && Boolean(error.code) // Prevents retrying cancelled requests
     && error.code !== 'ECONNABORTED' // Prevents retrying timed out requests
     && isRetryAllowed(error); // Prevents retrying unsafe errors
 }
