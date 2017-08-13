@@ -43,6 +43,14 @@ export function isIdempotentRequestError(error) {
 }
 
 /**
+ * @param  {Error}  error
+ * @return {boolean}
+ */
+function isNetworkOrIdempotentRequestError(error) {
+  return isNetworkError(error) || isIdempotentRequestError(error);
+}
+
+/**
  * Initializes and returns the retry state for the given request/config
  * @param  {AxiosRequestConfig} config
  * @return {Object}
@@ -130,7 +138,7 @@ export default function axiosRetry(axios, defaultOptions) {
 
     const {
       retries = 3,
-      retryCondition = isNetworkError
+      retryCondition = isNetworkOrIdempotentRequestError
     } = getRequestOptions(config, defaultOptions);
 
     const currentState = getCurrentState(config);
