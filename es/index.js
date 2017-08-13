@@ -13,6 +13,35 @@ export function isNetworkError(error) {
     && isRetryAllowed(error); // Prevents retrying unsafe errors
 }
 
+const SAFE_HTTP_METHODS = ['get', 'head', 'options'];
+const IDEMPOTENT_HTTP_METHODS = SAFE_HTTP_METHODS.concat(['put', 'delete']);
+
+/**
+ * @param  {Error}  error
+ * @return {boolean}
+ */
+export function isSafeRequestError(error) {
+  if (!error.response || !error.config) {
+    return false;
+  }
+
+  return error.response.status >= 500 && error.response.status <= 599
+    && SAFE_HTTP_METHODS.indexOf(error.config.method) !== -1;
+}
+
+/**
+ * @param  {Error}  error
+ * @return {boolean}
+ */
+export function isIdempotentRequestError(error) {
+  if (!error.response || !error.config) {
+    return false;
+  }
+
+  return error.response.status >= 500 && error.response.status <= 599
+    && IDEMPOTENT_HTTP_METHODS.indexOf(error.config.method) !== -1;
+}
+
 /**
  * Initializes and returns the retry state for the given request/config
  * @param  {AxiosRequestConfig} config
@@ -128,3 +157,8 @@ export default function axiosRetry(axios, defaultOptions) {
     return Promise.reject(error);
   });
 }
+
+// Compatibility with CommonJS
+axiosRetry.isNetworkError = isNetworkError;
+axiosRetry.isSafeRequestError = isSafeRequestError;
+axiosRetry.isIdempotentRequestError = isIdempotentRequestError;
