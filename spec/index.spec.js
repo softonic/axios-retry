@@ -121,7 +121,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
           () => nock('http://example.com').get('/test').reply(200)
         ]);
 
-        axiosRetry(client, { retries: 3, retryCondition: () => true });
+        axiosRetry(client, { retries: 3 });
 
         client.get('http://example.com/test', { timeout: 100 }).then(done.fail, error => {
           expect(error.code).toBe('ECONNABORTED');
@@ -145,44 +145,6 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         client.get('http://example.com/test').then(done.fail, error => {
           expect(error).toBe(generatedError);
-          done();
-        });
-      });
-
-      it('should reject with blacklisted errors without retrying', done => {
-        const client = axios.create();
-
-        const notFoundError = new Error('Not Found');
-        notFoundError.code = 'ENOTFOUND';
-
-        setupResponses(client, [
-          () => nock('http://example.com').get('/test').replyWithError(notFoundError),
-          () => nock('http://example.com').get('/test').reply(200)
-        ]);
-
-        axiosRetry(client, { retries: 1, retryCondition: () => true });
-
-        client.get('http://example.com/test').then(done.fail, error => {
-          expect(error).toBe(notFoundError);
-          done();
-        });
-      });
-
-      it('should reject with timed out requests without retrying', done => {
-        const client = axios.create();
-
-        const timeoutError = new Error('Timeout');
-        timeoutError.code = 'ECONNABORTED';
-
-        setupResponses(client, [
-          () => nock('http://example.com').get('/test').replyWithError(timeoutError),
-          () => nock('http://example.com').get('/test').reply(200)
-        ]);
-
-        axiosRetry(client, { retries: 1, retryCondition: () => true });
-
-        client.get('http://example.com/test').then(done.fail, error => {
-          expect(error).toBe(timeoutError);
           done();
         });
       });

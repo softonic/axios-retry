@@ -7,7 +7,10 @@ const namespace = 'axios-retry';
  * @return {boolean}
  */
 export function isNetworkError(error) {
-  return !error.response;
+  return !error.response
+    && error.code // Prevents retrying cancelled requests
+    && error.code !== 'ECONNABORTED' // Prevents retrying timed out requests
+    && isRetryAllowed(error); // Prevents retrying unsafe errors
 }
 
 /**
@@ -104,9 +107,7 @@ export default function axiosRetry(axios, defaultOptions) {
     const currentState = getCurrentState(config);
 
     const shouldRetry = retryCondition(error)
-      && error.code !== 'ECONNABORTED'
-      && currentState.retryCount < retries
-      && isRetryAllowed(error);
+      && currentState.retryCount < retries;
 
     if (shouldRetry) {
       currentState.retryCount++;
