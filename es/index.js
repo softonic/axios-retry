@@ -46,7 +46,7 @@ export function isIdempotentRequestError(error) {
  * @param  {Error}  error
  * @return {boolean}
  */
-function isNetworkOrIdempotentRequestError(error) {
+export function isNetworkOrIdempotentRequestError(error) {
   return isNetworkError(error) || isIdempotentRequestError(error);
 }
 
@@ -171,3 +171,4 @@ export default function axiosRetry(axios, defaultOptions) {
 axiosRetry.isNetworkError = isNetworkError;
 axiosRetry.isSafeRequestError = isSafeRequestError;
 axiosRetry.isIdempotentRequestError = isIdempotentRequestError;
+axiosRetry.isNetworkOrIdempotentRequestError = isNetworkOrIdempotentRequestError;
