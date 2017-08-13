@@ -29,220 +29,224 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
     nock.enableNetConnect();
   });
 
-  it('should resolve with a succesful response', done => {
-    const client = axios.create();
-    setupResponses(client, [
-      () => nock('http://example.com').get('/test').reply(200, 'It worked!')
-    ]);
+  describe('when the response is successful', () => {
+    it('should resolve with it', done => {
+      const client = axios.create();
+      setupResponses(client, [
+        () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+      ]);
 
-    axiosRetry(client, { retries: 0 });
+      axiosRetry(client, { retries: 0 });
 
-    client.get('http://example.com/test').then(result => {
-      expect(result.status).toBe(200);
-      done();
-    }, done.fail);
-  });
-
-  it('should resolve with a succesful response after an error', done => {
-    const client = axios.create();
-    setupResponses(client, [
-      () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
-      () => nock('http://example.com').get('/test').reply(200, 'It worked!')
-    ]);
-
-    axiosRetry(client, { retries: 1 });
-
-    client.get('http://example.com/test').then(result => {
-      expect(result.status).toBe(200);
-      done();
-    }, done.fail);
-  });
-
-  it('should resolve with a succesful response after an error (with agent)', done => {
-    const httpAgent = new http.Agent();
-
-    // Simulate circular structure
-    const fakeSocket = { foo: 'foo' };
-    httpAgent.sockets['multisearch.api.softonic.com:80:'] = [fakeSocket];
-    fakeSocket.socket = fakeSocket;
-
-    const client = axios.create({ agent: httpAgent });
-    setupResponses(client, [
-      () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
-      () => nock('http://example.com').get('/test').reply(200, 'It worked!')
-    ]);
-
-    axiosRetry(client, { retries: 1 });
-
-    client.get('http://example.com/test').then(result => {
-      expect(result.status).toBe(200);
-      done();
-    }, done.fail);
-  });
-
-  it('should resolve with a succesful response after an error (with httpAgent)', done => {
-    const httpAgent = new http.Agent();
-
-    // Simulate circular structure
-    const fakeSocket = { foo: 'foo' };
-    httpAgent.sockets['multisearch.api.softonic.com:80:'] = [fakeSocket];
-    fakeSocket.socket = fakeSocket;
-
-    const client = axios.create({ httpAgent });
-    setupResponses(client, [
-      () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
-      () => nock('http://example.com').get('/test').reply(200, 'It worked!')
-    ]);
-
-    axiosRetry(client, { retries: 1 });
-
-    client.get('http://example.com/test').then(result => {
-      expect(result.status).toBe(200);
-      done();
-    }, done.fail);
-  });
-
-  it('should reject with a request error if retries <= 0', done => {
-    const client = axios.create();
-
-    const generatedError = new Error();
-    setupResponses(client, [
-      () => nock('http://example.com').get('/test').replyWithError(generatedError)
-    ]);
-
-    axiosRetry(client, { retries: 0 });
-
-    client.get('http://example.com/test').then(done.fail, error => {
-      expect(error).toBe(generatedError);
-      done();
+      client.get('http://example.com/test').then(result => {
+        expect(result.status).toBe(200);
+        done();
+      }, done.fail);
     });
   });
 
-  it('should reject with a request error if there are more errors than retries', done => {
-    const client = axios.create();
+  describe('when the response is an error', () => {
+    it('should check if it satisfies the `retryCondition`', (done) => {
+      const client = axios.create();
+      setupResponses(client, [
+        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+        () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+      ]);
 
-    const generatedError = new Error();
-    setupResponses(client, [
-      () => nock('http://example.com').get('/test').replyWithError(new Error('foo error')),
-      () => nock('http://example.com').get('/test').replyWithError(generatedError)
-    ]);
+      const retryCondition = (error) => {
+        expect(error).toBe(NETWORK_ERROR);
+        done();
+        return false;
+      };
 
-    axiosRetry(client, { retries: 1 });
+      axiosRetry(client, { retries: 1, retryCondition });
 
-    client.get('http://example.com/test').then(done.fail, error => {
-      expect(error).toBe(generatedError);
-      done();
+      client.get('http://example.com/test').catch(() => {});
     });
-  });
 
-  it('should reject with error responses (404, 500, etc.) without retrying', done => {
-    const client = axios.create();
+    describe('when it satisfies the retry condition', () => {
+      it('should resolve with a successful retry', (done) => {
+        const client = axios.create();
+        setupResponses(client, [
+          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+        ]);
 
-    setupResponses(client, [
-      () => nock('http://example.com').get('/test').reply(404, 'Not found'),
-      () => nock('http://example.com').get('/test').reply(200)
-    ]);
+        axiosRetry(client, { retries: 1, retryCondition: () => true });
 
-    axiosRetry(client, { retries: 1 });
+        client.get('http://example.com/test').then(result => {
+          expect(result.status).toBe(200);
+          done();
+        }, done.fail);
+      });
 
-    client.get('http://example.com/test').then(done.fail, error => {
-      expect(error.response.status).toBe(404);
-      done();
+      it('should reject with a request error if retries <= 0', done => {
+        const client = axios.create();
+
+        setupResponses(client, [
+          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR)
+        ]);
+
+        axiosRetry(client, { retries: 0, retryCondition: () => {} });
+
+        client.get('http://example.com/test').then(done.fail, error => {
+          expect(error).toBe(NETWORK_ERROR);
+          done();
+        });
+      });
+
+      it('should reject with a request error if there are more errors than retries', done => {
+        const client = axios.create();
+
+        setupResponses(client, [
+          () => nock('http://example.com').get('/test').replyWithError(new Error('foo error')),
+          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR)
+        ]);
+
+        axiosRetry(client, { retries: 1, retryCondition: () => true });
+
+        client.get('http://example.com/test').then(done.fail, error => {
+          expect(error).toBe(NETWORK_ERROR);
+          done();
+        });
+      });
+
+      it('should honor the original `timeout` across retries', done => {
+        const client = axios.create();
+
+        setupResponses(client, [
+          () => nock('http://example.com').get('/test').delay(50).replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').delay(50).replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').delay(50).replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').reply(200)
+        ]);
+
+        axiosRetry(client, { retries: 3, retryCondition: () => true });
+
+        client.get('http://example.com/test', { timeout: 100 }).then(done.fail, error => {
+          expect(error.code).toBe('ECONNABORTED');
+          done();
+        });
+      });
+
+      it('should reject with errors without a `config` property without retrying', done => {
+        const client = axios.create();
+
+        setupResponses(client, [
+          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').reply(200)
+        ]);
+
+        // Force returning a plain error without extended information from Axios
+        const generatedError = new Error();
+        client.interceptors.response.use(null, () => Promise.reject(generatedError));
+
+        axiosRetry(client, { retries: 1, retryCondition: () => true });
+
+        client.get('http://example.com/test').then(done.fail, error => {
+          expect(error).toBe(generatedError);
+          done();
+        });
+      });
+
+      it('should reject with blacklisted errors without retrying', done => {
+        const client = axios.create();
+
+        const notFoundError = new Error('Not Found');
+        notFoundError.code = 'ENOTFOUND';
+
+        setupResponses(client, [
+          () => nock('http://example.com').get('/test').replyWithError(notFoundError),
+          () => nock('http://example.com').get('/test').reply(200)
+        ]);
+
+        axiosRetry(client, { retries: 1, retryCondition: () => true });
+
+        client.get('http://example.com/test').then(done.fail, error => {
+          expect(error).toBe(notFoundError);
+          done();
+        });
+      });
+
+      it('should reject with timed out requests without retrying', done => {
+        const client = axios.create();
+
+        const timeoutError = new Error('Timeout');
+        timeoutError.code = 'ECONNABORTED';
+
+        setupResponses(client, [
+          () => nock('http://example.com').get('/test').replyWithError(timeoutError),
+          () => nock('http://example.com').get('/test').reply(200)
+        ]);
+
+        axiosRetry(client, { retries: 1, retryCondition: () => true });
+
+        client.get('http://example.com/test').then(done.fail, error => {
+          expect(error).toBe(timeoutError);
+          done();
+        });
+      });
+
+      it('should work with a custom `agent` configuration', done => {
+        const httpAgent = new http.Agent();
+
+        // Simulate circular structure
+        const fakeSocket = { foo: 'foo' };
+        httpAgent.sockets['multisearch.api.softonic.com:80:'] = [fakeSocket];
+        fakeSocket.socket = fakeSocket;
+
+        const client = axios.create({ agent: httpAgent });
+        setupResponses(client, [
+          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+        ]);
+
+        axiosRetry(client, { retries: 1, retryCondition: () => true });
+
+        client.get('http://example.com/test').then(result => {
+          expect(result.status).toBe(200);
+          done();
+        }, done.fail);
+      });
+
+      it('should work with a custom `httpAgent` configuration', done => {
+        const httpAgent = new http.Agent();
+
+        // Simulate circular structure
+        const fakeSocket = { foo: 'foo' };
+        httpAgent.sockets['multisearch.api.softonic.com:80:'] = [fakeSocket];
+        fakeSocket.socket = fakeSocket;
+
+        const client = axios.create({ httpAgent });
+        setupResponses(client, [
+          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+        ]);
+
+        axiosRetry(client, { retries: 1, retryCondition: () => true });
+
+        client.get('http://example.com/test').then(result => {
+          expect(result.status).toBe(200);
+          done();
+        }, done.fail);
+      });
     });
-  });
 
-  it('should reject with blacklisted errors without retrying', done => {
-    const client = axios.create();
+    describe('when it does NOT satisfy the retry condition', () => {
+      it('should reject with the error', (done) => {
+        const client = axios.create();
+        setupResponses(client, [
+          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+        ]);
 
-    const notFoundError = new Error('Not Found');
-    notFoundError.code = 'ENOTFOUND';
+        axiosRetry(client, { retries: 1, retryCondition: () => false });
 
-    setupResponses(client, [
-      () => nock('http://example.com').get('/test').replyWithError(notFoundError),
-      () => nock('http://example.com').get('/test').reply(200)
-    ]);
-
-    axiosRetry(client, { retries: 1 });
-
-    client.get('http://example.com/test').then(done.fail, error => {
-      expect(error).toBe(notFoundError);
-      done();
-    });
-  });
-
-  it('should reject with timed out requests without retrying', done => {
-    const client = axios.create();
-
-    const timeoutError = new Error('Timeout');
-    timeoutError.code = 'ECONNABORTED';
-
-    setupResponses(client, [
-      () => nock('http://example.com').get('/test').replyWithError(timeoutError),
-      () => nock('http://example.com').get('/test').reply(200)
-    ]);
-
-    axiosRetry(client, { retries: 1 });
-
-    client.get('http://example.com/test').then(done.fail, error => {
-      expect(error).toBe(timeoutError);
-      done();
-    });
-  });
-
-  it('should use the original timeout across retries', done => {
-    const client = axios.create();
-
-    setupResponses(client, [
-      () => nock('http://example.com').get('/test').delay(50).replyWithError(NETWORK_ERROR),
-      () => nock('http://example.com').get('/test').delay(50).replyWithError(NETWORK_ERROR),
-      () => nock('http://example.com').get('/test').delay(50).replyWithError(NETWORK_ERROR),
-      () => nock('http://example.com').get('/test').reply(200)
-    ]);
-
-    axiosRetry(client, { retries: 3 });
-
-    client.get('http://example.com/test', { timeout: 100 }).then(done.fail, error => {
-      expect(error.code).toBe('ECONNABORTED');
-      done();
-    });
-  });
-
-  it('should reject with errors without a config property without retrying', done => {
-    const client = axios.create();
-
-    setupResponses(client, [
-      () => nock('http://example.com').get('/test').replyWithError(new Error()),
-      () => nock('http://example.com').get('/test').reply(200)
-    ]);
-
-    const generatedError = new Error();
-    client.interceptors.response.use(null, () => Promise.reject(generatedError));
-
-    axiosRetry(client, { retries: 1 });
-
-    client.get('http://example.com/test').then(done.fail, error => {
-      expect(error).toBe(generatedError);
-      done();
-    });
-  });
-
-  it('allows a custom retryCondition function to determine if it should retry or not', done => {
-    const client = axios.create();
-
-    const firstRequest = nock('http://example.com').get('/test').reply(500, 'Server Error');
-    const secondRequest = nock('http://example.com').get('/test').reply(500, 'Server Error');
-
-    setupResponses(client, [
-      () => firstRequest,
-      () => secondRequest
-    ]);
-
-    axiosRetry(client, { retries: 1, retryCondition: error => error.response.status === 500 });
-
-    client.get('http://example.com/test').then(done.fail, () => {
-      firstRequest.done();
-      secondRequest.done();
-      done();
+        client.get('http://example.com/test').then(done.fail, (error) => {
+          expect(error).toBe(NETWORK_ERROR);
+          done();
+        });
+      });
     });
   });
 
