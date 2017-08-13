@@ -1,7 +1,7 @@
 import http from 'http';
 import nock from 'nock';
 import axios from 'axios';
-import axiosRetry from '../es/index';
+import axiosRetry, { isNetworkError } from '../es/index';
 
 const NETWORK_ERROR = new Error('Some connection error');
 NETWORK_ERROR.code = 'ECONNRESET';
@@ -231,5 +231,29 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
       expect(result.status).toBe(200);
       done();
     }, done.fail);
+  });
+});
+
+describe('isNetworkError(error)', () => {
+  it('should be true for network errors like connection refused', () => {
+    const connectionRefusedError = new Error();
+    connectionRefusedError.code = 'ECONNREFUSED';
+    expect(isNetworkError(connectionRefusedError)).toBe(true);
+  });
+
+  it('should be false for timeout errors', () => {
+    const timeoutError = new Error();
+    timeoutError.code = 'ECONNABORTED';
+    expect(isNetworkError(timeoutError)).toBe(false);
+  });
+
+  it('should be false for errors with a response', () => {
+    const responseError = new Error('Response error');
+    responseError.response = { status: 500 };
+    expect(isNetworkError(responseError)).toBe(false);
+  });
+
+  it('should be false for other errors', () => {
+    expect(isNetworkError(new Error())).toBe(false);
   });
 });
