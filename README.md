@@ -52,7 +52,7 @@ client
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | retries | `Number` | 3 | The number of times to retry before failing |
-| retryCondition | `Function` | `error => !error.response` | A callback to further control if a request should be retried.  By default, it retries if the result did not have a response. |
+| retryCondition | `Function` | `isNetworkOrIdempotentRequestError` | A callback to further control if a request should be retried.  By default, it retries if it is a network error or a 5xx error on an idempotent request (GET, HEAD, OPTIONS, PUT or DELETE). |
 
 ## Testing
 
