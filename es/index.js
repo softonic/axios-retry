@@ -125,7 +125,8 @@ function fixConfig(axios, config) {
  * @param {Axios} axios An axios instance (the axios object or one created from axios.create)
  * @param {Object} [defaultOptions]
  * @param {number} [defaultOptions.retries=3] Number of retries
- * @param {number} [defaultOptions.retryCondition=isNetworkError] Number of retries
+ * @param {number} [defaultOptions.retryCondition=isNetworkOrIdempotentRequestError]
+ *        A function to determine if the error can be retried
  */
 export default function axiosRetry(axios, defaultOptions) {
   axios.interceptors.response.use(null, error => {
