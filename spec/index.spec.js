@@ -1,7 +1,12 @@
 import http from 'http';
 import nock from 'nock';
 import axios from 'axios';
-import axiosRetry, { isNetworkError } from '../es/index';
+import {
+  default as axiosRetry,
+  isNetworkError,
+  isSafeRequestError,
+  isIdempotentRequestError
+} from '../es/index';
 
 const NETWORK_ERROR = new Error('Some connection error');
 NETWORK_ERROR.code = 'ECONNRESET';
@@ -255,5 +260,86 @@ describe('isNetworkError(error)', () => {
 
   it('should be false for other errors', () => {
     expect(isNetworkError(new Error())).toBe(false);
+  });
+});
+
+describe('isSafeRequestError(error)', () => {
+  ['get', 'head', 'options'].forEach((method) => {
+    it(`should be true for "${method}" requests with a 5xx response`, () => {
+      const errorResponse = new Error('Error response');
+      errorResponse.config = { method };
+      errorResponse.response = { status: 500 };
+      expect(isSafeRequestError(errorResponse)).toBe(true);
+    });
+  });
+
+  ['post', 'put', 'patch', 'delete'].forEach((method) => {
+    it(`should be false for "${method}" requests with a 5xx response`, () => {
+      const errorResponse = new Error('Error response');
+      errorResponse.config = { method };
+      errorResponse.response = { status: 500 };
+      expect(isSafeRequestError(errorResponse)).toBe(false);
+    });
+  });
+
+  it('should be false for errors without a `config`', () => {
+    const errorResponse = new Error('Error response');
+    errorResponse.response = { status: 500 };
+    expect(isSafeRequestError(errorResponse)).toBe(false);
+  });
+
+  it('should be false for non-5xx responses', () => {
+    const errorResponse = new Error('Error response');
+    errorResponse.config = { method: 'get' };
+    errorResponse.response = { status: 404 };
+    expect(isSafeRequestError(errorResponse)).toBe(false);
+  });
+
+  it('should be false for errors without responses', () => {
+    const errorResponse = new Error('Error response');
+    errorResponse.config = { method: 'get' };
+    expect(isSafeRequestError(errorResponse)).toBe(false);
+  });
+});
+
+describe('isIdempotentRequestError(error)', () => {
+  ['get', 'head', 'options', 'put', 'delete'].forEach((method) => {
+    it(`should be true for "${method}" requests with a 5xx response`, () => {
+      const errorResponse = new Error('Error response');
+      errorResponse.config = { method };
+      errorResponse.response = { status: 500 };
+      expect(isIdempotentRequestError(errorResponse)).toBe(true);
+    });
+  });
+
+  ['post', 'patch'].forEach((method) => {
+    it(`should be false for "${method}" requests with a 5xx response`, () => {
+      const errorResponse = new Error('Error response');
+      errorResponse.config = { method };
+      errorResponse.response = { status: 500 };
+      expect(isIdempotentRequestError(errorResponse)).toBe(false);
+    });
+  });
+
+  // eslint-disable-next-line jasmine/no-spec-dupes
+  it('should be false for errors without a `config`', () => {
+    const errorResponse = new Error('Error response');
+    errorResponse.response = { status: 500 };
+    expect(isIdempotentRequestError(errorResponse)).toBe(false);
+  });
+
+  // eslint-disable-next-line jasmine/no-spec-dupes
+  it('should be false for non-5xx responses', () => {
+    const errorResponse = new Error('Error response');
+    errorResponse.config = { method: 'get' };
+    errorResponse.response = { status: 404 };
+    expect(isIdempotentRequestError(errorResponse)).toBe(false);
+  });
+
+  // eslint-disable-next-line jasmine/no-spec-dupes
+  it('should be false for errors without responses', () => {
+    const errorResponse = new Error('Error response');
+    errorResponse.config = { method: 'get' };
+    expect(isIdempotentRequestError(errorResponse)).toBe(false);
   });
 });

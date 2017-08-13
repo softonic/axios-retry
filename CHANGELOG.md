@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Moved some hard-coded conditions to the default `retryCondition` function so users can define a
 custom function that overwrites them. The conditions that verify that the error is not a timeout or an unsafe network error have been moved to `isNetworkError`.
+- Retried errors on idempotent requests (5xx with get, head, options, put and delete) by default.
+### Added
+- Added additional pre-defined retry conditions: `isSafeRequestError`, `isIdempotentRequestError`.
 
 ## [2.0.1] - 2017-06-19
 ### Fixed

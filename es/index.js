@@ -13,6 +13,43 @@ export function isNetworkError(error) {
     && isRetryAllowed(error); // Prevents retrying unsafe errors
 }
 
+const SAFE_HTTP_METHODS = ['get', 'head', 'options'];
+const IDEMPOTENT_HTTP_METHODS = SAFE_HTTP_METHODS.concat(['put', 'delete']);
+
+/**
+ * @param  {Error}  error
+ * @return {boolean}
+ */
+export function isSafeRequestError(error) {
+  if (!error.response || !error.config) {
+    return false;
+  }
+
+  return error.response.status >= 500 && error.response.status <= 599
+    && SAFE_HTTP_METHODS.indexOf(error.config.method) !== -1;
+}
+
+/**
+ * @param  {Error}  error
+ * @return {boolean}
+ */
+export function isIdempotentRequestError(error) {
+  if (!error.response || !error.config) {
+    return false;
+  }
+
+  return error.response.status >= 500 && error.response.status <= 599
+    && IDEMPOTENT_HTTP_METHODS.indexOf(error.config.method) !== -1;
+}
+
+/**
+ * @param  {Error}  error
+ * @return {boolean}
+ */
+export function isNetworkOrIdempotentRequestError(error) {
+  return isNetworkError(error) || isIdempotentRequestError(error);
+}
+
 /**
  * Initializes and returns the retry state for the given request/config
  * @param  {AxiosRequestConfig} config
@@ -88,7 +125,8 @@ function fixConfig(axios, config) {
  * @param {Axios} axios An axios instance (the axios object or one created from axios.create)
  * @param {Object} [defaultOptions]
  * @param {number} [defaultOptions.retries=3] Number of retries
- * @param {number} [defaultOptions.retryCondition=isNetworkError] Number of retries
+ * @param {number} [defaultOptions.retryCondition=isNetworkOrIdempotentRequestError]
+ *        A function to determine if the error can be retried
  */
 export default function axiosRetry(axios, defaultOptions) {
   axios.interceptors.response.use(null, error => {
@@ -101,7 +139,7 @@ export default function axiosRetry(axios, defaultOptions) {
 
     const {
       retries = 3,
-      retryCondition = isNetworkError
+      retryCondition = isNetworkOrIdempotentRequestError
     } = getRequestOptions(config, defaultOptions);
 
     const currentState = getCurrentState(config);
@@ -128,3 +166,9 @@ export default function axiosRetry(axios, defaultOptions) {
     return Promise.reject(error);
   });
 }
+
+// Compatibility with CommonJS
+axiosRetry.isNetworkError = isNetworkError;
+axiosRetry.isSafeRequestError = isSafeRequestError;
+axiosRetry.isIdempotentRequestError = isIdempotentRequestError;
+axiosRetry.isNetworkOrIdempotentRequestError = isNetworkOrIdempotentRequestError;
