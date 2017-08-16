@@ -120,9 +120,8 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         const client = axios.create();
 
         setupResponses(client, [
-          () => nock('http://example.com').get('/test').delay(50).replyWithError(NETWORK_ERROR),
-          () => nock('http://example.com').get('/test').delay(50).replyWithError(NETWORK_ERROR),
-          () => nock('http://example.com').get('/test').delay(50).replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').delay(75).replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').delay(75).replyWithError(NETWORK_ERROR),
           () => nock('http://example.com').get('/test').reply(200)
         ]);
 

@@ -129,6 +129,12 @@ function fixConfig(axios, config) {
  *        A function to determine if the error can be retried
  */
 export default function axiosRetry(axios, defaultOptions) {
+  axios.interceptors.request.use((config) => {
+    const currentState = getCurrentState(config);
+    currentState.lastRequestTime = Date.now();
+    return config;
+  });
+
   axios.interceptors.response.use(null, error => {
     const config = error.config;
 
