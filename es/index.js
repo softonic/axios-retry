@@ -129,6 +129,12 @@ function fixConfig(axios, config) {
  *        A function to determine if the error can be retried
  */
 export default function axiosRetry(axios, defaultOptions) {
+  axios.interceptors.request.use((config) => {
+    const currentState = getCurrentState(config);
+    currentState.lastRequestTime = Date.now();
+    return config;
+  });
+
   axios.interceptors.response.use(null, error => {
     const config = error.config;
 
@@ -154,11 +160,11 @@ export default function axiosRetry(axios, defaultOptions) {
       // with circular structures: https://github.com/mzabriskie/axios/issues/370
       fixConfig(axios, config);
 
-      const now = Date.now();
       if (config.timeout && currentState.lastRequestTime) {
-        config.timeout -= now - currentState.lastRequestTime;
+        const lastRequestDuration = Date.now() - currentState.lastRequestTime;
+        // Minimum 1ms timeout (passing 0 or less to XHR means no timeout)
+        config.timeout = Math.max(config.timeout - lastRequestDuration, 1);
       }
-      currentState.lastRequestTime = now;
 
       return axios(config);
     }

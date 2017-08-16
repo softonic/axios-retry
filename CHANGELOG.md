@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- Fixed first request time not being taken into account in timeout across retries.
+- Fixed negative timeouts being passed to XHR (browsers), causing that no timeout was applied.
+
 ## [3.0.0] - 2017-08-13
 
 ### Changed
