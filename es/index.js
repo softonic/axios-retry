@@ -160,13 +160,11 @@ export default function axiosRetry(axios, defaultOptions) {
       // with circular structures: https://github.com/mzabriskie/axios/issues/370
       fixConfig(axios, config);
 
-      const now = Date.now();
       if (config.timeout && currentState.lastRequestTime) {
-        const lastRequestDuration = now - currentState.lastRequestTime;
+        const lastRequestDuration = Date.now() - currentState.lastRequestTime;
         // Minimum 1ms timeout (passing 0 or less to XHR means no timeout)
         config.timeout = Math.max(config.timeout - lastRequestDuration, 1);
       }
-      currentState.lastRequestTime = now;
 
       return axios(config);
     }
