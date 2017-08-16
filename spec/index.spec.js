@@ -270,6 +270,12 @@ describe('isSafeRequestError(error)', () => {
       errorResponse.response = { status: 500 };
       expect(isSafeRequestError(errorResponse)).toBe(true);
     });
+
+    it(`should be true for "${method}" requests without a response`, () => {
+      const errorResponse = new Error('Error response');
+      errorResponse.config = { method };
+      expect(isSafeRequestError(errorResponse)).toBe(true);
+    });
   });
 
   ['post', 'put', 'patch', 'delete'].forEach((method) => {
@@ -277,6 +283,12 @@ describe('isSafeRequestError(error)', () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
       errorResponse.response = { status: 500 };
+      expect(isSafeRequestError(errorResponse)).toBe(false);
+    });
+
+    it(`should be false for "${method}" requests without a response`, () => {
+      const errorResponse = new Error('Error response');
+      errorResponse.config = { method };
       expect(isSafeRequestError(errorResponse)).toBe(false);
     });
   });
@@ -293,12 +305,6 @@ describe('isSafeRequestError(error)', () => {
     errorResponse.response = { status: 404 };
     expect(isSafeRequestError(errorResponse)).toBe(false);
   });
-
-  it('should be false for errors without responses', () => {
-    const errorResponse = new Error('Error response');
-    errorResponse.config = { method: 'get' };
-    expect(isSafeRequestError(errorResponse)).toBe(false);
-  });
 });
 
 describe('isIdempotentRequestError(error)', () => {
@@ -309,10 +315,23 @@ describe('isIdempotentRequestError(error)', () => {
       errorResponse.response = { status: 500 };
       expect(isIdempotentRequestError(errorResponse)).toBe(true);
     });
+
+    it(`should be true for "${method}" requests without a response`, () => {
+      const errorResponse = new Error('Error response');
+      errorResponse.config = { method };
+      expect(isIdempotentRequestError(errorResponse)).toBe(true);
+    });
   });
 
   ['post', 'patch'].forEach((method) => {
     it(`should be false for "${method}" requests with a 5xx response`, () => {
+      const errorResponse = new Error('Error response');
+      errorResponse.config = { method };
+      errorResponse.response = { status: 500 };
+      expect(isIdempotentRequestError(errorResponse)).toBe(false);
+    });
+
+    it(`should be false for "${method}" requests without a response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
       errorResponse.response = { status: 500 };
@@ -332,13 +351,6 @@ describe('isIdempotentRequestError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.config = { method: 'get' };
     errorResponse.response = { status: 404 };
-    expect(isIdempotentRequestError(errorResponse)).toBe(false);
-  });
-
-  // eslint-disable-next-line jasmine/no-spec-dupes
-  it('should be false for errors without responses', () => {
-    const errorResponse = new Error('Error response');
-    errorResponse.config = { method: 'get' };
     expect(isIdempotentRequestError(errorResponse)).toBe(false);
   });
 });

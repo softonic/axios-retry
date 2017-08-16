@@ -20,13 +20,22 @@ const IDEMPOTENT_HTTP_METHODS = SAFE_HTTP_METHODS.concat(['put', 'delete']);
  * @param  {Error}  error
  * @return {boolean}
  */
+function isRetryableError(error) {
+  return error.code !== 'ECONNABORTED'
+    && (!error.response || (error.response.status >= 500 && error.response.status <= 599));
+}
+
+/**
+ * @param  {Error}  error
+ * @return {boolean}
+ */
 export function isSafeRequestError(error) {
-  if (!error.response || !error.config) {
+  if (!error.config) {
+    // Cannot determine if the request can be retried
     return false;
   }
 
-  return error.response.status >= 500 && error.response.status <= 599
-    && SAFE_HTTP_METHODS.indexOf(error.config.method) !== -1;
+  return isRetryableError(error) && SAFE_HTTP_METHODS.indexOf(error.config.method) !== -1;
 }
 
 /**
@@ -34,12 +43,12 @@ export function isSafeRequestError(error) {
  * @return {boolean}
  */
 export function isIdempotentRequestError(error) {
-  if (!error.response || !error.config) {
+  if (!error.config) {
+    // Cannot determine if the request can be retried
     return false;
   }
 
-  return error.response.status >= 500 && error.response.status <= 599
-    && IDEMPOTENT_HTTP_METHODS.indexOf(error.config.method) !== -1;
+  return isRetryableError(error) && IDEMPOTENT_HTTP_METHODS.indexOf(error.config.method) !== -1;
 }
 
 /**

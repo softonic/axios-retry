@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 - Fixed first request time not being taken into account in timeout across retries.
 - Fixed negative timeouts being passed to XHR (browsers), causing that no timeout was applied.
+- Fixed safe methods and idempotent errors not being retried on unknown network errors.
 
 ## [3.0.0] - 2017-08-13
 
