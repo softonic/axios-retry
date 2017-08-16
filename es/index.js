@@ -162,7 +162,9 @@ export default function axiosRetry(axios, defaultOptions) {
 
       const now = Date.now();
       if (config.timeout && currentState.lastRequestTime) {
-        config.timeout -= now - currentState.lastRequestTime;
+        const lastRequestDuration = now - currentState.lastRequestTime;
+        // Minimum 1ms timeout (passing 0 or less to XHR means no timeout)
+        config.timeout = Math.max(config.timeout - lastRequestDuration, 1);
       }
       currentState.lastRequestTime = now;
 
