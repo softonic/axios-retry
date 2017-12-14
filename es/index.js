@@ -60,6 +60,21 @@ export function isNetworkOrIdempotentRequestError(error) {
 }
 
 /**
+ * @return {number} - delay in milliseconds, always 1
+ */
+export function noDelay() {
+  return 1;
+}
+
+/**
+ * @param  {number} [retryNumber=0]
+ * @return {number} - delay in milliseconds
+ */
+export function exponentialDelay(retryNumber = 0) {
+  return (Math.pow(2, retryNumber) * 1000) + Math.floor(Math.random() * 1000);
+}
+
+/**
  * Initializes and returns the retry state for the given request/config
  * @param  {AxiosRequestConfig} config
  * @return {Object}
@@ -154,7 +169,8 @@ export default function axiosRetry(axios, defaultOptions) {
 
     const {
       retries = 3,
-      retryCondition = isNetworkOrIdempotentRequestError
+      retryCondition = isNetworkOrIdempotentRequestError,
+      delayStrategy = noDelay
     } = getRequestOptions(config, defaultOptions);
 
     const currentState = getCurrentState(config);
@@ -175,7 +191,9 @@ export default function axiosRetry(axios, defaultOptions) {
         config.timeout = Math.max(config.timeout - lastRequestDuration, 1);
       }
 
-      return axios(config);
+      return new Promise((resolve) =>
+        setTimeout(() => resolve(axios(config)), delayStrategy(currentState.retryCount))
+      );
     }
 
     return Promise.reject(error);
@@ -187,3 +205,5 @@ axiosRetry.isNetworkError = isNetworkError;
 axiosRetry.isSafeRequestError = isSafeRequestError;
 axiosRetry.isIdempotentRequestError = isIdempotentRequestError;
 axiosRetry.isNetworkOrIdempotentRequestError = isNetworkOrIdempotentRequestError;
+axiosRetry.noDelay = noDelay;
+axiosRetry.exponentialDelay = exponentialDelay;

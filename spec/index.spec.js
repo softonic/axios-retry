@@ -5,7 +5,9 @@ import {
   default as axiosRetry,
   isNetworkError,
   isSafeRequestError,
-  isIdempotentRequestError
+  isIdempotentRequestError,
+  noDelay,
+  exponentialDelay
 } from '../es/index';
 
 const NETWORK_ERROR = new Error('Some connection error');
@@ -367,5 +369,29 @@ describe('isIdempotentRequestError(error)', () => {
     errorResponse.code = 'ECONNABORTED';
     errorResponse.config = { method: 'get' };
     expect(isIdempotentRequestError(errorResponse)).toBe(false);
+  });
+});
+
+describe('noDelay', () => {
+  it('should return 1 for each call', () => {
+    expect(noDelay()).toBe(1);
+    expect(noDelay(1)).toBe(1);
+    expect(noDelay(10)).toBe(1);
+    expect(noDelay(1000)).toBe(1);
+  });
+});
+
+describe('exponentialDelay', () => {
+  it('should return exponential retry delay', () => {
+    function assertTime(retryNumber) {
+      const min = (Math.pow(2, retryNumber) * 1000);
+      const max = (Math.pow(2, retryNumber) * 1000) + 1000;
+
+      const time = exponentialDelay(retryNumber);
+
+      expect((time >= min && time <= max)).toBe(true);
+    }
+
+    [1, 2, 3, 4, 5].forEach(assertTime);
   });
 });
