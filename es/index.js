@@ -126,6 +126,14 @@ function fixConfig(axios, config) {
  *     result.data; // 'ok'
  *   });
  *
+ * // Exponential back-off delay between requests
+ * axiosRetry(axios, { delayStrategy: axiosRetry.exponentialDelay});
+ *
+ * // Custom delay strategy
+ * axiosRetry(axios, { delayStrategy: (retryCount) => {
+ *   return retryCount * 1000;
+ * }});
+ *
  * // Also works with custom axios instances
  * const client = axios.create({ baseURL: 'http://example.com' });
  * axiosRetry(client, { retries: 3 });
@@ -151,6 +159,8 @@ function fixConfig(axios, config) {
  * @param {number} [defaultOptions.retries=3] Number of retries
  * @param {Function} [defaultOptions.retryCondition=isNetworkOrIdempotentRequestError]
  *        A function to determine if the error can be retried
+ * @param {Function} [defaultOptions.delayStrategy=noDelay]
+ *        A function to determine the delay between retry requestss
  */
 export default function axiosRetry(axios, defaultOptions) {
   axios.interceptors.request.use((config) => {
