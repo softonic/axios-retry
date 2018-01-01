@@ -4,12 +4,16 @@ import axios from 'axios';
 import {
   default as axiosRetry,
   isNetworkError,
+  isTimeoutError,
   isSafeRequestError,
-  isIdempotentRequestError
+  isIdempotentRequestError,
+  isNetworkOrIdempotentRequestError
 } from '../es/index';
 
 const NETWORK_ERROR = new Error('Some connection error');
 NETWORK_ERROR.code = 'ECONNRESET';
+const ECONNABORTED = new Error('Some connection error');
+ECONNABORTED.code = 'ECONNABORTED';
 
 function setupResponses(client, responses) {
   const configureResponse = () => {
@@ -214,6 +218,38 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         });
       });
     });
+
+    describe('when retryTimeoutAborted is true', () => {
+      it('should retry on timeout error', (done) => {
+        const client = axios.create();
+        setupResponses(client, [
+          () => nock('http://example.com').get('/test').replyWithError(ECONNABORTED),
+          () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+        ]);
+
+        axiosRetry(client, { retries: 1, retryTimeoutAborted: true });
+        client.get('http://example.com/test').then(result => {
+          expect(result.status).toBe(200);
+          done();
+        }, done.fail);
+      });
+    });
+
+    describe('when retryTimeoutAborted is not gived(=false)', () => {
+      it('should not retry on timeout error', (done) => {
+        const client = axios.create();
+        setupResponses(client, [
+          () => nock('http://example.com').get('/test').replyWithError(ECONNABORTED),
+          () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+        ]);
+
+        axiosRetry(client, { retries: 1, retryTimeoutAborted: false });
+        client.get('http://example.com/test').then(done.fail, (error) => {
+          expect(error).toBe(ECONNABORTED);
+          done();
+        });
+      });
+    });
   });
 
   it('should use request-specific configuration', done => {
@@ -245,12 +281,6 @@ describe('isNetworkError(error)', () => {
     expect(isNetworkError(connectionRefusedError)).toBe(true);
   });
 
-  it('should be false for timeout errors', () => {
-    const timeoutError = new Error();
-    timeoutError.code = 'ECONNABORTED';
-    expect(isNetworkError(timeoutError)).toBe(false);
-  });
-
   it('should be false for errors with a response', () => {
     const responseError = new Error('Response error');
     responseError.response = { status: 500 };
@@ -259,6 +289,22 @@ describe('isNetworkError(error)', () => {
 
   it('should be false for other errors', () => {
     expect(isNetworkError(new Error())).toBe(false);
+  });
+});
+
+describe('isTimeoutError(error)', () => {
+  it('should be true for timeout errors', () => {
+    const timeoutError = new Error();
+    timeoutError.code = 'ECONNABORTED';
+    expect(isTimeoutError(timeoutError)).toBe(true);
+  });
+});
+
+describe('isNetworkOrIdempotentRequestError(error)', () => {
+  it('should be false for timeout errors', () => {
+    const timeoutError = new Error();
+    timeoutError.code = 'ECONNABORTED';
+    expect(isNetworkOrIdempotentRequestError(timeoutError)).toBe(false);
   });
 });
 
@@ -303,13 +349,6 @@ describe('isSafeRequestError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.config = { method: 'get' };
     errorResponse.response = { status: 404 };
-    expect(isSafeRequestError(errorResponse)).toBe(false);
-  });
-
-  it('should be false for aborted requests', () => {
-    const errorResponse = new Error('Error response');
-    errorResponse.code = 'ECONNABORTED';
-    errorResponse.config = { method: 'get' };
     expect(isSafeRequestError(errorResponse)).toBe(false);
   });
 });
@@ -358,14 +397,6 @@ describe('isIdempotentRequestError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.config = { method: 'get' };
     errorResponse.response = { status: 404 };
-    expect(isIdempotentRequestError(errorResponse)).toBe(false);
-  });
-
-  // eslint-disable-next-line jasmine/no-spec-dupes
-  it('should be false for aborted requests', () => {
-    const errorResponse = new Error('Error response');
-    errorResponse.code = 'ECONNABORTED';
-    errorResponse.config = { method: 'get' };
     expect(isIdempotentRequestError(errorResponse)).toBe(false);
   });
 });
