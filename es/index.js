@@ -1,6 +1,15 @@
 import isRetryAllowed from 'is-retry-allowed';
 
+let shouldRetryAborted;
 const namespace = 'axios-retry';
+
+/**
+ * @param  {Error}  error
+ * @return {boolean}
+ */
+export function isTimeoutError(error) {
+  return error.code !== 'ECONNABORTED';
+}
 
 /**
  * @param  {Error}  error
@@ -9,7 +18,7 @@ const namespace = 'axios-retry';
 export function isNetworkError(error) {
   return !error.response
     && Boolean(error.code) // Prevents retrying cancelled requests
-    && error.code !== 'ECONNABORTED' // Prevents retrying timed out requests
+    && (shouldRetryAborted || isTimeoutError(error)) // Prevents retrying timed out requests
     && isRetryAllowed(error); // Prevents retrying unsafe errors
 }
 
@@ -21,7 +30,7 @@ const IDEMPOTENT_HTTP_METHODS = SAFE_HTTP_METHODS.concat(['put', 'delete']);
  * @return {boolean}
  */
 function isRetryableError(error) {
-  return error.code !== 'ECONNABORTED'
+  return (shouldRetryAborted || isTimeoutError(error))
     && (!error.response || (error.response.status >= 500 && error.response.status <= 599));
 }
 
@@ -56,7 +65,7 @@ export function isIdempotentRequestError(error) {
  * @return {boolean}
  */
 export function isNetworkOrIdempotentRequestError(error) {
-  return isNetworkError(error) || isIdempotentRequestError(error);
+  return isTimeoutError(error) || isNetworkError(error) || isIdempotentRequestError(error);
 }
 
 /**
@@ -134,6 +143,7 @@ function fixConfig(axios, config) {
  * @param {Axios} axios An axios instance (the axios object or one created from axios.create)
  * @param {Object} [defaultOptions]
  * @param {number} [defaultOptions.retries=3] Number of retries
+ * @param {boolean} [defaultOptions.retryAborted=false] whether to retry failed requests with code `ECONNABORTED` 
  * @param {number} [defaultOptions.retryCondition=isNetworkOrIdempotentRequestError]
  *        A function to determine if the error can be retried
  */
@@ -154,9 +164,11 @@ export default function axiosRetry(axios, defaultOptions) {
 
     const {
       retries = 3,
+      retryAborted = false,
       retryCondition = isNetworkOrIdempotentRequestError
     } = getRequestOptions(config, defaultOptions);
 
+    shouldRetryAborted = retryAborted;
     const currentState = getCurrentState(config);
 
     const shouldRetry = retryCondition(error)
