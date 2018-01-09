@@ -126,11 +126,11 @@ function fixConfig(axios, config) {
  *     result.data; // 'ok'
  *   });
  *
- * // Exponential back-off delay between requests
- * axiosRetry(axios, { delayStrategy: axiosRetry.exponentialDelay});
+ * // Exponential back-off retry delay between requests
+ * axiosRetry(axios, { retryDelay : axiosRetry.exponentialDelay});
  *
- * // Custom delay strategy
- * axiosRetry(axios, { delayStrategy: (retryCount) => {
+ * // Custom retry delay
+ * axiosRetry(axios, { retryDelay : (retryCount) => {
  *   return retryCount * 1000;
  * }});
  *
@@ -159,7 +159,7 @@ function fixConfig(axios, config) {
  * @param {number} [defaultOptions.retries=3] Number of retries
  * @param {Function} [defaultOptions.retryCondition=isNetworkOrIdempotentRequestError]
  *        A function to determine if the error can be retried
- * @param {Function} [defaultOptions.delayStrategy=noDelay]
+ * @param {Function} [defaultOptions.retryDelay =noDelay]
  *        A function to determine the delay between retry requestss
  */
 export default function axiosRetry(axios, defaultOptions) {
@@ -180,7 +180,7 @@ export default function axiosRetry(axios, defaultOptions) {
     const {
       retries = 3,
       retryCondition = isNetworkOrIdempotentRequestError,
-      delayStrategy = noDelay
+      retryDelay = noDelay
     } = getRequestOptions(config, defaultOptions);
 
     const currentState = getCurrentState(config);
@@ -202,7 +202,7 @@ export default function axiosRetry(axios, defaultOptions) {
       }
 
       return new Promise((resolve) =>
-        setTimeout(() => resolve(axios(config)), delayStrategy(currentState.retryCount))
+        setTimeout(() => resolve(axios(config)), retryDelay(currentState.retryCount))
       );
     }
 
