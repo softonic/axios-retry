@@ -60,10 +60,10 @@ export function isNetworkOrIdempotentRequestError(error) {
 }
 
 /**
- * @return {number} - delay in milliseconds, always 1
+ * @return {number} - delay in milliseconds, always 0
  */
 function noDelay() {
-  return 1;
+  return 0;
 }
 
 /**
