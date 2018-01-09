@@ -62,7 +62,7 @@ export function isNetworkOrIdempotentRequestError(error) {
 /**
  * @return {number} - delay in milliseconds, always 1
  */
-export function noDelay() {
+function noDelay() {
   return 1;
 }
 
@@ -215,5 +215,4 @@ axiosRetry.isNetworkError = isNetworkError;
 axiosRetry.isSafeRequestError = isSafeRequestError;
 axiosRetry.isIdempotentRequestError = isIdempotentRequestError;
 axiosRetry.isNetworkOrIdempotentRequestError = isNetworkOrIdempotentRequestError;
-axiosRetry.noDelay = noDelay;
 axiosRetry.exponentialDelay = exponentialDelay;

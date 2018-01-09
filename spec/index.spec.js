@@ -6,7 +6,6 @@ import {
   isNetworkError,
   isSafeRequestError,
   isIdempotentRequestError,
-  noDelay,
   exponentialDelay
 } from '../es/index';
 
@@ -369,15 +368,6 @@ describe('isIdempotentRequestError(error)', () => {
     errorResponse.code = 'ECONNABORTED';
     errorResponse.config = { method: 'get' };
     expect(isIdempotentRequestError(errorResponse)).toBe(false);
-  });
-});
-
-describe('noDelay', () => {
-  it('should return 1 for each call', () => {
-    expect(noDelay()).toBe(1);
-    expect(noDelay(1)).toBe(1);
-    expect(noDelay(10)).toBe(1);
-    expect(noDelay(1000)).toBe(1);
   });
 });
 
