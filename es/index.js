@@ -159,8 +159,8 @@ function fixConfig(axios, config) {
  * @param {number} [defaultOptions.retries=3] Number of retries
  * @param {Function} [defaultOptions.retryCondition=isNetworkOrIdempotentRequestError]
  *        A function to determine if the error can be retried
- * @param {Function} [defaultOptions.retryDelay =noDelay]
- *        A function to determine the delay between retry requestss
+ * @param {Function} [defaultOptions.retryDelay=noDelay]
+ *        A function to determine the delay between retry requests
  */
 export default function axiosRetry(axios, defaultOptions) {
   axios.interceptors.request.use((config) => {
