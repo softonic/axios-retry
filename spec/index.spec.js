@@ -374,8 +374,8 @@ describe('isIdempotentRequestError(error)', () => {
 describe('exponentialDelay', () => {
   it('should return exponential retry delay', () => {
     function assertTime(retryNumber) {
-      const min = (Math.pow(2, retryNumber) * 1000);
-      const max = (Math.pow(2, retryNumber) * 1000) + 1000;
+      const min = (Math.pow(2, (retryNumber - 1)) * 1000);
+      const max = (Math.pow(2, (retryNumber - 1)) * 1000) + 1000;
 
       const time = exponentialDelay(retryNumber);
 
