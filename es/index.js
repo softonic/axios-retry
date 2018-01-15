@@ -202,7 +202,7 @@ export default function axiosRetry(axios, defaultOptions) {
       }
 
       return new Promise((resolve) =>
-        setTimeout(() => resolve(axios(config)), retryDelay(currentState.retryCount))
+        setTimeout(() => resolve(axios(config)), retryDelay(currentState.retryCount, error))
       );
     }
 
