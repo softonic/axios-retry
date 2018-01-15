@@ -402,14 +402,14 @@ describe('isIdempotentRequestError(error)', () => {
 describe('exponentialDelay', () => {
   it('should return exponential retry delay', () => {
     function assertTime(retryNumber) {
-      const min = (Math.pow(2, (retryNumber - 1)) * 1000);
-      const max = (Math.pow(2, (retryNumber - 1)) * 1000) + 1000;
+      const min = (Math.pow(2, retryNumber) * 100);
+      const max = (Math.pow(2, retryNumber * 100) * 0.2);
 
       const time = exponentialDelay(retryNumber);
 
       expect((time >= min && time <= max)).toBe(true);
     }
 
-    [1, 2, 3, 4, 5].forEach(assertTime);
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach(assertTime);
   });
 });

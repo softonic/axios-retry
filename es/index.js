@@ -67,11 +67,13 @@ function noDelay() {
 }
 
 /**
- * @param  {number} retryNumber
+ * @param  {number} [retryNumber=0]
  * @return {number} - delay in milliseconds
  */
-export function exponentialDelay(retryNumber) {
-  return (Math.pow(2, (retryNumber - 1)) * 1000) + Math.floor(Math.random() * 1000);
+export function exponentialDelay(retryNumber = 0) {
+  const delay = Math.pow(2, retryNumber) * 100;
+  const randomSum = delay * 0.2 * Math.random(); // 0-20% of the delay
+  return delay + randomSum;
 }
 
 /**
