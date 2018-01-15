@@ -190,6 +190,7 @@ export default function axiosRetry(axios, defaultOptions) {
 
     if (shouldRetry) {
       currentState.retryCount++;
+      const delay = retryDelay(currentState.retryCount, error);
 
       // Axios fails merging this configuration to the default configuration because it has an issue
       // with circular structures: https://github.com/mzabriskie/axios/issues/370
@@ -198,11 +199,11 @@ export default function axiosRetry(axios, defaultOptions) {
       if (config.timeout && currentState.lastRequestTime) {
         const lastRequestDuration = Date.now() - currentState.lastRequestTime;
         // Minimum 1ms timeout (passing 0 or less to XHR means no timeout)
-        config.timeout = Math.max(config.timeout - lastRequestDuration, 1);
+        config.timeout = Math.max((config.timeout - lastRequestDuration) - delay, 1);
       }
 
       return new Promise((resolve) =>
-        setTimeout(() => resolve(axios(config)), retryDelay(currentState.retryCount, error))
+        setTimeout(() => resolve(axios(config)), delay)
       );
     }
 
