@@ -5,7 +5,8 @@ import {
   default as axiosRetry,
   isNetworkError,
   isSafeRequestError,
-  isIdempotentRequestError
+  isIdempotentRequestError,
+  isRetryableError
 } from '../es/index';
 
 const NETWORK_ERROR = new Error('Some connection error');
@@ -367,5 +368,33 @@ describe('isIdempotentRequestError(error)', () => {
     errorResponse.code = 'ECONNABORTED';
     errorResponse.config = { method: 'get' };
     expect(isIdempotentRequestError(errorResponse)).toBe(false);
+  });
+});
+
+describe('isRetryableError(error)', () => {
+  it('should be false for aborted requests', () => {
+    const errorResponse = new Error('Error response');
+    errorResponse.code = 'ECONNABORTED';
+    expect(isRetryableError(errorResponse)).toBe(false);
+  });
+
+  it('should be true for timeouts', () => {
+    const errorResponse = new Error('Error response');
+    errorResponse.code = 'ECONNRESET';
+    expect(isRetryableError(errorResponse)).toBe(true);
+  });
+
+  it('should be true for a 5xx response', () => {
+    const errorResponse = new Error('Error response');
+    errorResponse.code = 'ECONNRESET';
+    errorResponse.response = { status: 500 };
+    expect(isRetryableError(errorResponse)).toBe(true);
+  });
+
+  it('should be false for a response !== 5xx', () => {
+    const errorResponse = new Error('Error response');
+    errorResponse.code = 'ECONNRESET';
+    errorResponse.response = { status: 400 };
+    expect(isRetryableError(errorResponse)).toBe(false);
   });
 });
