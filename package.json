@@ -9,7 +9,8 @@
   "files": [
     "es",
     "lib",
-    "index.js"
+    "index.js",
+    "index.d.ts"
   ],
   "scripts": {
     "lint": "eslint es/**/*.js spec/**/*.spec.js",

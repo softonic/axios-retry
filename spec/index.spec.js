@@ -7,6 +7,7 @@ import {
   isSafeRequestError,
   isIdempotentRequestError,
   exponentialDelay
+  isRetryableError
 } from '../es/index';
 
 const NETWORK_ERROR = new Error('Some connection error');
@@ -411,5 +412,33 @@ describe('exponentialDelay', () => {
     }
 
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach(assertTime);
+  });
+});
+
+describe('isRetryableError(error)', () => {
+  it('should be false for aborted requests', () => {
+    const errorResponse = new Error('Error response');
+    errorResponse.code = 'ECONNABORTED';
+    expect(isRetryableError(errorResponse)).toBe(false);
+  });
+
+  it('should be true for timeouts', () => {
+    const errorResponse = new Error('Error response');
+    errorResponse.code = 'ECONNRESET';
+    expect(isRetryableError(errorResponse)).toBe(true);
+  });
+
+  it('should be true for a 5xx response', () => {
+    const errorResponse = new Error('Error response');
+    errorResponse.code = 'ECONNRESET';
+    errorResponse.response = { status: 500 };
+    expect(isRetryableError(errorResponse)).toBe(true);
+  });
+
+  it('should be false for a response !== 5xx', () => {
+    const errorResponse = new Error('Error response');
+    errorResponse.code = 'ECONNRESET';
+    errorResponse.response = { status: 400 };
+    expect(isRetryableError(errorResponse)).toBe(false);
   });
 });

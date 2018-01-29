@@ -25,7 +25,7 @@ export interface IAxiosRetryConfig {
 
 export interface IAxiosRetry {
   (
-    axios: axios.AxiosStatic,
+    axios: axios.AxiosStatic | axios.AxiosInstance,
     axiosRetryConfig?: IAxiosRetryConfig
   )
 }
