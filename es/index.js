@@ -20,7 +20,7 @@ const IDEMPOTENT_HTTP_METHODS = SAFE_HTTP_METHODS.concat(['put', 'delete']);
  * @param  {Error}  error
  * @return {boolean}
  */
-function isRetryableError(error) {
+export function isRetryableError(error) {
   return error.code !== 'ECONNABORTED'
     && (!error.response || (error.response.status >= 500 && error.response.status <= 599));
 }
