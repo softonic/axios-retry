@@ -6,7 +6,7 @@ import {
   isNetworkError,
   isSafeRequestError,
   isIdempotentRequestError,
-  exponentialDelay
+  exponentialDelay,
   isRetryableError
 } from '../es/index';
 
