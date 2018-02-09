@@ -14,7 +14,13 @@ export interface IAxiosRetryConfig {
    * 
    * @type {Function}
    */
-  retryCondition?: (error: axios.AxiosError) => boolean
+  retryCondition?: (error: axios.AxiosError) => boolean,
+  /**
+   * A callback to further control the delay between retry requests. By default there is no delay.
+   *
+   * @type {Function}
+   */
+  retryDelay?: (retryCount: number, error: axios.AxiosError) => number
 }
 
 export interface IAxiosRetry {

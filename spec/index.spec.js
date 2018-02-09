@@ -6,6 +6,7 @@ import {
   isNetworkError,
   isSafeRequestError,
   isIdempotentRequestError,
+  exponentialDelay,
   isRetryableError
 } from '../es/index';
 
@@ -239,6 +240,34 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
   });
 });
 
+describe('axiosRetry(axios, { retries, retryDelay })', () => {
+  describe('when custom retryDelay function is supplied', () => {
+    it('should execute for each retry', done => {
+      const client = axios.create();
+
+      setupResponses(client, [
+        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+        () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+      ]);
+
+      let retryCount = 0;
+
+      axiosRetry(client, {
+        retries: 4,
+        retryCondition: () => true,
+        retryDelay: () => { retryCount += 1; return 0; }
+      });
+
+      client.get('http://example.com/test').then(() => {
+        expect(retryCount).toBe(3);
+        done();
+      }, done.fail);
+    });
+  });
+});
+
 describe('isNetworkError(error)', () => {
   it('should be true for network errors like connection refused', () => {
     const connectionRefusedError = new Error();
@@ -368,6 +397,21 @@ describe('isIdempotentRequestError(error)', () => {
     errorResponse.code = 'ECONNABORTED';
     errorResponse.config = { method: 'get' };
     expect(isIdempotentRequestError(errorResponse)).toBe(false);
+  });
+});
+
+describe('exponentialDelay', () => {
+  it('should return exponential retry delay', () => {
+    function assertTime(retryNumber) {
+      const min = (Math.pow(2, retryNumber) * 100);
+      const max = (Math.pow(2, retryNumber * 100) * 0.2);
+
+      const time = exponentialDelay(retryNumber);
+
+      expect((time >= min && time <= max)).toBe(true);
+    }
+
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach(assertTime);
   });
 });
 
