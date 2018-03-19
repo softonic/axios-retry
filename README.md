@@ -1,6 +1,6 @@
 # axios-retry
 
-Axios plugin that intercepts failed requests and retries them whenever posible.
+Axios plugin that intercepts failed requests and retries them whenever possible.
 
 ## Installation
 
