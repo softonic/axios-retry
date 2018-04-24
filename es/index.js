@@ -222,3 +222,4 @@ axiosRetry.isSafeRequestError = isSafeRequestError;
 axiosRetry.isIdempotentRequestError = isIdempotentRequestError;
 axiosRetry.isNetworkOrIdempotentRequestError = isNetworkOrIdempotentRequestError;
 axiosRetry.exponentialDelay = exponentialDelay;
+axiosRetry.isRetryableError = isRetryableError;
