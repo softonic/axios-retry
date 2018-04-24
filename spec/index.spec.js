@@ -135,6 +135,23 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         });
       });
 
+      it('should reset the original `timeout` between requests', done => {
+        const client = axios.create();
+
+        setupResponses(client, [
+          () => nock('http://example.com').get('/test').delay(75).replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').delay(75).replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').reply(200)
+        ]);
+
+        axiosRetry(client, { retries: 3, shouldResetTimeout: true });
+
+        client.get('http://example.com/test', { timeout: 100 }).then(result => {
+          expect(result.status).toBe(200);
+          done();
+        });
+      });
+
       it('should reject with errors without a `config` property without retrying', done => {
         const client = axios.create();
 

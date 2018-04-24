@@ -159,6 +159,8 @@ function fixConfig(axios, config) {
  * @param {Axios} axios An axios instance (the axios object or one created from axios.create)
  * @param {Object} [defaultOptions]
  * @param {number} [defaultOptions.retries=3] Number of retries
+ * @param {boolean} [defaultOptions.shouldResetTimeout=false]
+ *        Defines if the timeout should be reset between retries
  * @param {Function} [defaultOptions.retryCondition=isNetworkOrIdempotentRequestError]
  *        A function to determine if the error can be retried
  * @param {Function} [defaultOptions.retryDelay=noDelay]
@@ -182,7 +184,8 @@ export default function axiosRetry(axios, defaultOptions) {
     const {
       retries = 3,
       retryCondition = isNetworkOrIdempotentRequestError,
-      retryDelay = noDelay
+      retryDelay = noDelay,
+      shouldResetTimeout = false
     } = getRequestOptions(config, defaultOptions);
 
     const currentState = getCurrentState(config);
@@ -198,7 +201,7 @@ export default function axiosRetry(axios, defaultOptions) {
       // with circular structures: https://github.com/mzabriskie/axios/issues/370
       fixConfig(axios, config);
 
-      if (config.timeout && currentState.lastRequestTime) {
+      if (!shouldResetTimeout && config.timeout && currentState.lastRequestTime) {
         const lastRequestDuration = Date.now() - currentState.lastRequestTime;
         // Minimum 1ms timeout (passing 0 or less to XHR means no timeout)
         config.timeout = Math.max((config.timeout - lastRequestDuration) - delay, 1);
