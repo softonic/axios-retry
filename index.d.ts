@@ -34,7 +34,7 @@ export interface IAxiosRetry {
   (
     axios: axios.AxiosStatic | axios.AxiosInstance,
     axiosRetryConfig?: IAxiosRetryConfig
-  )
+  ): void
 }
 
 declare const axiosRetry: IAxiosRetry
