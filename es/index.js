@@ -4,13 +4,16 @@ const namespace = 'axios-retry';
 
 /**
  * @param  {Error}  error
+ * @param {boolean} [retryOnTimeout=false]
+ *        Defines if timeouts should be retried
  * @return {boolean}
  */
-export function isNetworkError(error) {
+export function isNetworkError(error, retryOnTimeout = false) {
   return (
     !error.response &&
     Boolean(error.code) && // Prevents retrying cancelled requests
-    error.code !== 'ECONNABORTED' && // Prevents retrying timed out requests
+    // Prevents retrying timed out requests if retryOnTimeout is false
+    (error.code !== 'ECONNABORTED' || retryOnTimeout) &&
     isRetryAllowed(error)
   ); // Prevents retrying unsafe errors
 }
@@ -20,47 +23,60 @@ const IDEMPOTENT_HTTP_METHODS = SAFE_HTTP_METHODS.concat(['put', 'delete']);
 
 /**
  * @param  {Error}  error
+ * @param {boolean} [retryOnTimeout=false]
+ *        Defines if timeouts should be retried
  * @return {boolean}
  */
-export function isRetryableError(error) {
+export function isRetryableError(error, retryOnTimeout = false) {
   return (
-    error.code !== 'ECONNABORTED' &&
+    (error.code !== 'ECONNABORTED' || retryOnTimeout) &&
     (!error.response || (error.response.status >= 500 && error.response.status <= 599))
   );
 }
 
 /**
  * @param  {Error}  error
+ * @param {boolean} [retryOnTimeout=false]
+ *        Defines if timeouts should be retried
  * @return {boolean}
  */
-export function isSafeRequestError(error) {
+export function isSafeRequestError(error, retryOnTimeout = false) {
   if (!error.config) {
     // Cannot determine if the request can be retried
     return false;
   }
 
-  return isRetryableError(error) && SAFE_HTTP_METHODS.indexOf(error.config.method) !== -1;
+  return (
+    isRetryableError(error, retryOnTimeout) && SAFE_HTTP_METHODS.indexOf(error.config.method) !== -1
+  );
 }
 
 /**
  * @param  {Error}  error
+ * @param {boolean} [retryOnTimeout=false]
+ *        Defines if timeouts should be retried
  * @return {boolean}
  */
-export function isIdempotentRequestError(error) {
+export function isIdempotentRequestError(error, retryOnTimeout = false) {
   if (!error.config) {
     // Cannot determine if the request can be retried
     return false;
   }
 
-  return isRetryableError(error) && IDEMPOTENT_HTTP_METHODS.indexOf(error.config.method) !== -1;
+  return (
+    isRetryableError(error, retryOnTimeout) &&
+    IDEMPOTENT_HTTP_METHODS.indexOf(error.config.method) !== -1
+  );
 }
 
 /**
  * @param  {Error}  error
+ * @param {boolean} [retryOnTimeout=false]
+ *        Defines if timeouts should be retried
  * @return {boolean}
  */
-export function isNetworkOrIdempotentRequestError(error) {
-  return isNetworkError(error) || isIdempotentRequestError(error);
+export function isNetworkOrIdempotentRequestError(error, retryOnTimeout = false) {
+  return isNetworkError(error, retryOnTimeout) || isIdempotentRequestError(error, retryOnTimeout);
 }
 
 /**
@@ -165,6 +181,8 @@ function fixConfig(axios, config) {
  * @param {number} [defaultOptions.retries=3] Number of retries
  * @param {boolean} [defaultOptions.shouldResetTimeout=false]
  *        Defines if the timeout should be reset between retries
+ * @param {boolean} [defaultOptions.retryOnTimeout=false]
+ *        Defines if timeouts should be retried
  * @param {Function} [defaultOptions.retryCondition=isNetworkOrIdempotentRequestError]
  *        A function to determine if the error can be retried
  * @param {Function} [defaultOptions.retryDelay=noDelay]
@@ -189,12 +207,13 @@ export default function axiosRetry(axios, defaultOptions) {
       retries = 3,
       retryCondition = isNetworkOrIdempotentRequestError,
       retryDelay = noDelay,
-      shouldResetTimeout = false
+      shouldResetTimeout = false,
+      retryOnTimeout = false
     } = getRequestOptions(config, defaultOptions);
 
     const currentState = getCurrentState(config);
 
-    const shouldRetry = retryCondition(error) && currentState.retryCount < retries;
+    const shouldRetry = retryCondition(error, retryOnTimeout) && currentState.retryCount < retries;
 
     if (shouldRetry) {
       currentState.retryCount += 1;

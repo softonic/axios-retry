@@ -16,6 +16,13 @@ export interface IAxiosRetryConfig {
    */
   shouldResetTimeout?: boolean,
   /**
+   * Defines if timeouts requests should be retried
+   * default: false
+   *
+   * @type {boolean}
+   */
+  retryOnTimeout?: boolean,
+  /**
    * A callback to further control if a request should be retried. By default, it retries if the result did not have a response.
    * default: error => !error.response
    *

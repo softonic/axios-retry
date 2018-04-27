@@ -172,7 +172,8 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         });
       });
 
-      it('should reset the original `timeout` between requests', done => {
+      it('should reset the original `timeout` between requests '
+        + 'if shouldResetTimeout is true', done => {
         const client = axios.create();
 
         setupResponses(client, [
@@ -396,6 +397,12 @@ describe('isNetworkError(error)', () => {
     expect(isNetworkError(timeoutError)).toBe(false);
   });
 
+  it('should be true for timeout errors if retryOnTimeout is true', () => {
+    const timeoutError = new Error();
+    timeoutError.code = 'ECONNABORTED';
+    expect(isNetworkError(timeoutError, true)).toBe(true);
+  });
+
   it('should be false for errors with a response', () => {
     const responseError = new Error('Response error');
     responseError.response = { status: 500 };
@@ -457,6 +464,13 @@ describe('isSafeRequestError(error)', () => {
     errorResponse.config = { method: 'get' };
     expect(isSafeRequestError(errorResponse)).toBe(false);
   });
+
+  it('should be true for aborted requests if retryOnTimeout is true', () => {
+    const errorResponse = new Error('Error response');
+    errorResponse.code = 'ECONNABORTED';
+    errorResponse.config = { method: 'get' };
+    expect(isSafeRequestError(errorResponse, true)).toBe(true);
+  });
 });
 
 describe('isIdempotentRequestError(error)', () => {
@@ -513,6 +527,14 @@ describe('isIdempotentRequestError(error)', () => {
     errorResponse.config = { method: 'get' };
     expect(isIdempotentRequestError(errorResponse)).toBe(false);
   });
+
+  // eslint-disable-next-line jasmine/no-spec-dupes
+  it('should be true for aborted requests if retryOnTimeout is true', () => {
+    const errorResponse = new Error('Error response');
+    errorResponse.code = 'ECONNABORTED';
+    errorResponse.config = { method: 'get' };
+    expect(isIdempotentRequestError(errorResponse, true)).toBe(true);
+  });
 });
 
 describe('exponentialDelay', () => {
@@ -535,6 +557,12 @@ describe('isRetryableError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.code = 'ECONNABORTED';
     expect(isRetryableError(errorResponse)).toBe(false);
+  });
+
+  it('should be true for aborted requests if retryOnTimeout is true', () => {
+    const errorResponse = new Error('Error response');
+    errorResponse.code = 'ECONNABORTED';
+    expect(isRetryableError(errorResponse, true)).toBe(true);
   });
 
   it('should be true for timeouts', () => {
