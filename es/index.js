@@ -210,6 +210,8 @@ export default function axiosRetry(axios, defaultOptions) {
         config.timeout = Math.max(config.timeout - lastRequestDuration - delay, 1);
       }
 
+      config.transformRequest = [data => data];
+
       return new Promise(resolve => setTimeout(() => resolve(axios(config)), delay));
     }
 

@@ -104,6 +104,35 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         }, done.fail);
       });
 
+      it('should not run transformRequest twice', done => {
+        const client = axios.create({
+          transformRequest: [JSON.stringify]
+        });
+        setupResponses(client, [
+          () =>
+            nock('http://example.com')
+              .post('/test', body => {
+                expect(body.a).toBe('b');
+                return true;
+              })
+              .replyWithError(NETWORK_ERROR),
+          () =>
+            nock('http://example.com')
+              .post('/test', body => {
+                expect(body.a).toBe('b');
+                return true;
+              })
+              .reply(200, 'It worked!')
+        ]);
+
+        axiosRetry(client, { retries: 1, retryCondition: () => true });
+
+        client.post('http://example.com/test', { a: 'b' }).then(result => {
+          expect(result.status).toBe(200);
+          done();
+        }, done.fail);
+      });
+
       it('should reject with a request error if retries <= 0', done => {
         const client = axios.create();
 
