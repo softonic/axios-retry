@@ -7,10 +7,12 @@ const namespace = 'axios-retry';
  * @return {boolean}
  */
 export function isNetworkError(error) {
-  return !error.response
-    && Boolean(error.code) // Prevents retrying cancelled requests
-    && error.code !== 'ECONNABORTED' // Prevents retrying timed out requests
-    && isRetryAllowed(error); // Prevents retrying unsafe errors
+  return (
+    !error.response &&
+    Boolean(error.code) && // Prevents retrying cancelled requests
+    error.code !== 'ECONNABORTED' && // Prevents retrying timed out requests
+    isRetryAllowed(error)
+  ); // Prevents retrying unsafe errors
 }
 
 const SAFE_HTTP_METHODS = ['get', 'head', 'options'];
@@ -21,8 +23,10 @@ const IDEMPOTENT_HTTP_METHODS = SAFE_HTTP_METHODS.concat(['put', 'delete']);
  * @return {boolean}
  */
 export function isRetryableError(error) {
-  return error.code !== 'ECONNABORTED'
-    && (!error.response || (error.response.status >= 500 && error.response.status <= 599));
+  return (
+    error.code !== 'ECONNABORTED' &&
+    (!error.response || (error.response.status >= 500 && error.response.status <= 599))
+  );
 }
 
 /**
@@ -167,7 +171,7 @@ function fixConfig(axios, config) {
  *        A function to determine the delay between retry requests
  */
 export default function axiosRetry(axios, defaultOptions) {
-  axios.interceptors.request.use((config) => {
+  axios.interceptors.request.use(config => {
     const currentState = getCurrentState(config);
     currentState.lastRequestTime = Date.now();
     return config;
@@ -190,11 +194,10 @@ export default function axiosRetry(axios, defaultOptions) {
 
     const currentState = getCurrentState(config);
 
-    const shouldRetry = retryCondition(error)
-      && currentState.retryCount < retries;
+    const shouldRetry = retryCondition(error) && currentState.retryCount < retries;
 
     if (shouldRetry) {
-      currentState.retryCount++;
+      currentState.retryCount += 1;
       const delay = retryDelay(currentState.retryCount, error);
 
       // Axios fails merging this configuration to the default configuration because it has an issue
@@ -204,12 +207,10 @@ export default function axiosRetry(axios, defaultOptions) {
       if (!shouldResetTimeout && config.timeout && currentState.lastRequestTime) {
         const lastRequestDuration = Date.now() - currentState.lastRequestTime;
         // Minimum 1ms timeout (passing 0 or less to XHR means no timeout)
-        config.timeout = Math.max((config.timeout - lastRequestDuration) - delay, 1);
+        config.timeout = Math.max(config.timeout - lastRequestDuration - delay, 1);
       }
 
-      return new Promise((resolve) =>
-        setTimeout(() => resolve(axios(config)), delay)
-      );
+      return new Promise(resolve => setTimeout(() => resolve(axios(config)), delay));
     }
 
     return Promise.reject(error);
