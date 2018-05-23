@@ -1,8 +1,7 @@
 import http from 'http';
 import nock from 'nock';
 import axios from 'axios';
-import {
-  default as axiosRetry,
+import axiosRetry, {
   isNetworkError,
   isSafeRequestError,
   isIdempotentRequestError,
@@ -20,13 +19,16 @@ function setupResponses(client, responses) {
       response();
     }
   };
-  client.interceptors.response.use(result => {
-    configureResponse();
-    return result;
-  }, error => {
-    configureResponse();
-    return Promise.reject(error);
-  });
+  client.interceptors.response.use(
+    result => {
+      configureResponse();
+      return result;
+    },
+    error => {
+      configureResponse();
+      return Promise.reject(error);
+    }
+  );
   configureResponse();
 }
 
@@ -40,7 +42,10 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
     it('should resolve with it', done => {
       const client = axios.create();
       setupResponses(client, [
-        () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+        () =>
+          nock('http://example.com')
+            .get('/test')
+            .reply(200, 'It worked!')
       ]);
 
       axiosRetry(client, { retries: 0 });
@@ -53,14 +58,20 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
   });
 
   describe('when the response is an error', () => {
-    it('should check if it satisfies the `retryCondition`', (done) => {
+    it('should check if it satisfies the `retryCondition`', done => {
       const client = axios.create();
       setupResponses(client, [
-        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
-        () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+        () =>
+          nock('http://example.com')
+            .get('/test')
+            .replyWithError(NETWORK_ERROR),
+        () =>
+          nock('http://example.com')
+            .get('/test')
+            .reply(200, 'It worked!')
       ]);
 
-      const retryCondition = (error) => {
+      const retryCondition = error => {
         expect(error).toBe(NETWORK_ERROR);
         done();
         return false;
@@ -72,11 +83,17 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
     });
 
     describe('when it satisfies the retry condition', () => {
-      it('should resolve with a successful retry', (done) => {
+      it('should resolve with a successful retry', done => {
         const client = axios.create();
         setupResponses(client, [
-          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
-          () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .replyWithError(NETWORK_ERROR),
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .reply(200, 'It worked!')
         ]);
 
         axiosRetry(client, { retries: 1, retryCondition: () => true });
@@ -91,7 +108,10 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         const client = axios.create();
 
         setupResponses(client, [
-          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR)
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .replyWithError(NETWORK_ERROR)
         ]);
 
         axiosRetry(client, { retries: 0, retryCondition: () => {} });
@@ -106,8 +126,14 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         const client = axios.create();
 
         setupResponses(client, [
-          () => nock('http://example.com').get('/test').replyWithError(new Error('foo error')),
-          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR)
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .replyWithError(new Error('foo error')),
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .replyWithError(NETWORK_ERROR)
         ]);
 
         axiosRetry(client, { retries: 1, retryCondition: () => true });
@@ -122,9 +148,20 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         const client = axios.create();
 
         setupResponses(client, [
-          () => nock('http://example.com').get('/test').delay(75).replyWithError(NETWORK_ERROR),
-          () => nock('http://example.com').get('/test').delay(75).replyWithError(NETWORK_ERROR),
-          () => nock('http://example.com').get('/test').reply(200)
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .delay(75)
+              .replyWithError(NETWORK_ERROR),
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .delay(75)
+              .replyWithError(NETWORK_ERROR),
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .reply(200)
         ]);
 
         axiosRetry(client, { retries: 3 });
@@ -139,9 +176,20 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         const client = axios.create();
 
         setupResponses(client, [
-          () => nock('http://example.com').get('/test').delay(75).replyWithError(NETWORK_ERROR),
-          () => nock('http://example.com').get('/test').delay(75).replyWithError(NETWORK_ERROR),
-          () => nock('http://example.com').get('/test').reply(200)
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .delay(75)
+              .replyWithError(NETWORK_ERROR),
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .delay(75)
+              .replyWithError(NETWORK_ERROR),
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .reply(200)
         ]);
 
         axiosRetry(client, { retries: 3, shouldResetTimeout: true });
@@ -156,8 +204,14 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         const client = axios.create();
 
         setupResponses(client, [
-          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
-          () => nock('http://example.com').get('/test').reply(200)
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .replyWithError(NETWORK_ERROR),
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .reply(200)
         ]);
 
         // Force returning a plain error without extended information from Axios
@@ -182,8 +236,14 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         const client = axios.create({ agent: httpAgent });
         setupResponses(client, [
-          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
-          () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .replyWithError(NETWORK_ERROR),
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .reply(200, 'It worked!')
         ]);
 
         axiosRetry(client, { retries: 1, retryCondition: () => true });
@@ -204,8 +264,14 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         const client = axios.create({ httpAgent });
         setupResponses(client, [
-          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
-          () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .replyWithError(NETWORK_ERROR),
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .reply(200, 'It worked!')
         ]);
 
         axiosRetry(client, { retries: 1, retryCondition: () => true });
@@ -218,16 +284,22 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
     });
 
     describe('when it does NOT satisfy the retry condition', () => {
-      it('should reject with the error', (done) => {
+      it('should reject with the error', done => {
         const client = axios.create();
         setupResponses(client, [
-          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
-          () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .replyWithError(NETWORK_ERROR),
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .reply(200, 'It worked!')
         ]);
 
         axiosRetry(client, { retries: 1, retryCondition: () => false });
 
-        client.get('http://example.com/test').then(done.fail, (error) => {
+        client.get('http://example.com/test').then(done.fail, error => {
           expect(error).toBe(NETWORK_ERROR);
           done();
         });
@@ -239,21 +311,32 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
     const client = axios.create();
 
     setupResponses(client, [
-      () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
-      () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
-      () => nock('http://example.com').get('/test').reply(200)
+      () =>
+        nock('http://example.com')
+          .get('/test')
+          .replyWithError(NETWORK_ERROR),
+      () =>
+        nock('http://example.com')
+          .get('/test')
+          .replyWithError(NETWORK_ERROR),
+      () =>
+        nock('http://example.com')
+          .get('/test')
+          .reply(200)
     ]);
 
     axiosRetry(client, { retries: 0 });
 
-    client.get('http://example.com/test', {
-      'axios-retry': {
-        retries: 2
-      }
-    }).then(result => {
-      expect(result.status).toBe(200);
-      done();
-    }, done.fail);
+    client
+      .get('http://example.com/test', {
+        'axios-retry': {
+          retries: 2
+        }
+      })
+      .then(result => {
+        expect(result.status).toBe(200);
+        done();
+      }, done.fail);
   });
 });
 
@@ -263,10 +346,22 @@ describe('axiosRetry(axios, { retries, retryDelay })', () => {
       const client = axios.create();
 
       setupResponses(client, [
-        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
-        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
-        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
-        () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+        () =>
+          nock('http://example.com')
+            .get('/test')
+            .replyWithError(NETWORK_ERROR),
+        () =>
+          nock('http://example.com')
+            .get('/test')
+            .replyWithError(NETWORK_ERROR),
+        () =>
+          nock('http://example.com')
+            .get('/test')
+            .replyWithError(NETWORK_ERROR),
+        () =>
+          nock('http://example.com')
+            .get('/test')
+            .reply(200, 'It worked!')
       ]);
 
       let retryCount = 0;
@@ -274,7 +369,10 @@ describe('axiosRetry(axios, { retries, retryDelay })', () => {
       axiosRetry(client, {
         retries: 4,
         retryCondition: () => true,
-        retryDelay: () => { retryCount += 1; return 0; }
+        retryDelay: () => {
+          retryCount += 1;
+          return 0;
+        }
       });
 
       client.get('http://example.com/test').then(() => {
@@ -310,7 +408,7 @@ describe('isNetworkError(error)', () => {
 });
 
 describe('isSafeRequestError(error)', () => {
-  ['get', 'head', 'options'].forEach((method) => {
+  ['get', 'head', 'options'].forEach(method => {
     it(`should be true for "${method}" requests with a 5xx response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
@@ -325,7 +423,7 @@ describe('isSafeRequestError(error)', () => {
     });
   });
 
-  ['post', 'put', 'patch', 'delete'].forEach((method) => {
+  ['post', 'put', 'patch', 'delete'].forEach(method => {
     it(`should be false for "${method}" requests with a 5xx response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
@@ -362,7 +460,7 @@ describe('isSafeRequestError(error)', () => {
 });
 
 describe('isIdempotentRequestError(error)', () => {
-  ['get', 'head', 'options', 'put', 'delete'].forEach((method) => {
+  ['get', 'head', 'options', 'put', 'delete'].forEach(method => {
     it(`should be true for "${method}" requests with a 5xx response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
@@ -377,7 +475,7 @@ describe('isIdempotentRequestError(error)', () => {
     });
   });
 
-  ['post', 'patch'].forEach((method) => {
+  ['post', 'patch'].forEach(method => {
     it(`should be false for "${method}" requests with a 5xx response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
@@ -420,12 +518,12 @@ describe('isIdempotentRequestError(error)', () => {
 describe('exponentialDelay', () => {
   it('should return exponential retry delay', () => {
     function assertTime(retryNumber) {
-      const min = (Math.pow(2, retryNumber) * 100);
-      const max = (Math.pow(2, retryNumber * 100) * 0.2);
+      const min = Math.pow(2, retryNumber) * 100;
+      const max = Math.pow(2, retryNumber * 100) * 0.2;
 
       const time = exponentialDelay(retryNumber);
 
-      expect((time >= min && time <= max)).toBe(true);
+      expect(time >= min && time <= max).toBe(true);
     }
 
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach(assertTime);
