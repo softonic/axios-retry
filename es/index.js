@@ -4,18 +4,14 @@ const namespace = 'axios-retry';
 
 /**
  * @param  {Error}  error
- * @param {boolean} [retryOnTimeout=false]
- *        Defines if timeouts should be retried
  * @return {boolean}
  */
-export function isNetworkError(error, retryOnTimeout = false) {
+export function isNetworkError(error) {
   return (
     !error.response &&
     Boolean(error.code) && // Prevents retrying cancelled requests
-    // Prevents retrying timed out requests if retryOnTimeout is false
-    (error.code !== 'ECONNABORTED' || retryOnTimeout) &&
-    isRetryAllowed(error)
-  ); // Prevents retrying unsafe errors
+    isRetryAllowed(error) // Prevents retrying unsafe errors
+  );
 }
 
 const SAFE_HTTP_METHODS = ['get', 'head', 'options'];
@@ -23,50 +19,36 @@ const IDEMPOTENT_HTTP_METHODS = SAFE_HTTP_METHODS.concat(['put', 'delete']);
 
 /**
  * @param  {Error}  error
- * @param {boolean} [retryOnTimeout=false]
- *        Defines if timeouts should be retried
  * @return {boolean}
  */
-export function isRetryableError(error, retryOnTimeout = false) {
-  return (
-    (error.code !== 'ECONNABORTED' || retryOnTimeout) &&
-    (!error.response || (error.response.status >= 500 && error.response.status <= 599))
-  );
+export function isRetryableError(error) {
+  return !error.response || (error.response.status >= 500 && error.response.status <= 599);
 }
 
 /**
  * @param  {Error}  error
- * @param {boolean} [retryOnTimeout=false]
- *        Defines if timeouts should be retried
  * @return {boolean}
  */
-export function isSafeRequestError(error, retryOnTimeout = false) {
+export function isSafeRequestError(error) {
   if (!error.config) {
     // Cannot determine if the request can be retried
     return false;
   }
 
-  return (
-    isRetryableError(error, retryOnTimeout) && SAFE_HTTP_METHODS.indexOf(error.config.method) !== -1
-  );
+  return isRetryableError(error) && SAFE_HTTP_METHODS.indexOf(error.config.method) !== -1;
 }
 
 /**
  * @param  {Error}  error
- * @param {boolean} [retryOnTimeout=false]
- *        Defines if timeouts should be retried
  * @return {boolean}
  */
-export function isIdempotentRequestError(error, retryOnTimeout = false) {
+export function isIdempotentRequestError(error) {
   if (!error.config) {
     // Cannot determine if the request can be retried
     return false;
   }
 
-  return (
-    isRetryableError(error, retryOnTimeout) &&
-    IDEMPOTENT_HTTP_METHODS.indexOf(error.config.method) !== -1
-  );
+  return isRetryableError(error) && IDEMPOTENT_HTTP_METHODS.indexOf(error.config.method) !== -1;
 }
 
 /**
@@ -76,7 +58,11 @@ export function isIdempotentRequestError(error, retryOnTimeout = false) {
  * @return {boolean}
  */
 export function isNetworkOrIdempotentRequestError(error, retryOnTimeout = false) {
-  return isNetworkError(error, retryOnTimeout) || isIdempotentRequestError(error, retryOnTimeout);
+  return (
+    (isNetworkError(error) || isIdempotentRequestError(error)) &&
+    // Prevents retrying timed out requests if retryOnTimeout is false
+    (error.code !== 'ECONNABORTED' || retryOnTimeout)
+  );
 }
 
 /**
