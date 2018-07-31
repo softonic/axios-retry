@@ -1,5 +1,7 @@
 # axios-retry
 
+[![Build Status](https://travis-ci.org/softonic/axios-retry.svg?branch=master)](https://travis-ci.org/softonic/axios-retry)
+
 Axios plugin that intercepts failed requests and retries them whenever possible.
 
 ## Installation
