@@ -71,7 +71,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
             .reply(200, 'It worked!')
       ]);
 
-      const retryCondition = error => {
+      const retryCondition = async error => {
         expect(error).toBe(NETWORK_ERROR);
         done();
         return false;
@@ -96,7 +96,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
               .reply(200, 'It worked!')
         ]);
 
-        axiosRetry(client, { retries: 1, retryCondition: () => true });
+        axiosRetry(client, { retries: 1, retryCondition: async () => true });
 
         client.get('http://example.com/test').then(result => {
           expect(result.status).toBe(200);
@@ -125,7 +125,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
               .reply(200, 'It worked!')
         ]);
 
-        axiosRetry(client, { retries: 1, retryCondition: () => true });
+        axiosRetry(client, { retries: 1, retryCondition: async () => true });
 
         client.post('http://example.com/test', { a: 'b' }).then(result => {
           expect(result.status).toBe(200);
@@ -143,7 +143,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
               .replyWithError(NETWORK_ERROR)
         ]);
 
-        axiosRetry(client, { retries: 0, retryCondition: () => {} });
+        axiosRetry(client, { retries: 0, retryCondition: async () => {} });
 
         client.get('http://example.com/test').then(done.fail, error => {
           expect(error).toBe(NETWORK_ERROR);
@@ -165,7 +165,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
               .replyWithError(NETWORK_ERROR)
         ]);
 
-        axiosRetry(client, { retries: 1, retryCondition: () => true });
+        axiosRetry(client, { retries: 1, retryCondition: async () => true });
 
         client.get('http://example.com/test').then(done.fail, error => {
           expect(error).toBe(NETWORK_ERROR);
@@ -247,7 +247,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         const generatedError = new Error();
         client.interceptors.response.use(null, () => Promise.reject(generatedError));
 
-        axiosRetry(client, { retries: 1, retryCondition: () => true });
+        axiosRetry(client, { retries: 1, retryCondition: async () => true });
 
         client.get('http://example.com/test').then(done.fail, error => {
           expect(error).toBe(generatedError);
@@ -275,7 +275,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
               .reply(200, 'It worked!')
         ]);
 
-        axiosRetry(client, { retries: 1, retryCondition: () => true });
+        axiosRetry(client, { retries: 1, retryCondition: async () => true });
 
         client.get('http://example.com/test').then(result => {
           expect(result.status).toBe(200);
@@ -303,7 +303,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
               .reply(200, 'It worked!')
         ]);
 
-        axiosRetry(client, { retries: 1, retryCondition: () => true });
+        axiosRetry(client, { retries: 1, retryCondition: async () => true });
 
         client.get('http://example.com/test').then(result => {
           expect(result.status).toBe(200);
@@ -326,7 +326,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
               .reply(200, 'It worked!')
         ]);
 
-        axiosRetry(client, { retries: 1, retryCondition: () => false });
+        axiosRetry(client, { retries: 1, retryCondition: async () => false });
 
         client.get('http://example.com/test').then(done.fail, error => {
           expect(error).toBe(NETWORK_ERROR);
@@ -397,7 +397,7 @@ describe('axiosRetry(axios, { retries, retryDelay })', () => {
 
       axiosRetry(client, {
         retries: 4,
-        retryCondition: () => true,
+        retryCondition: async () => true,
         retryDelay: () => {
           retryCount += 1;
           return 0;

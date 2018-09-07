@@ -59,7 +59,7 @@ export function isIdempotentRequestError(error) {
  * @param  {Error}  error
  * @return {boolean}
  */
-export function isNetworkOrIdempotentRequestError(error) {
+export async function isNetworkOrIdempotentRequestError(error) {
   return isNetworkError(error) || isIdempotentRequestError(error);
 }
 
@@ -194,28 +194,28 @@ export default function axiosRetry(axios, defaultOptions) {
 
     const currentState = getCurrentState(config);
 
-    const shouldRetry = retryCondition(error) && currentState.retryCount < retries;
+    return retryCondition(error).then(shouldRetry => {
+      if (shouldRetry && currentState.retryCount < retries) {
+        currentState.retryCount += 1;
+        const delay = retryDelay(currentState.retryCount, error);
 
-    if (shouldRetry) {
-      currentState.retryCount += 1;
-      const delay = retryDelay(currentState.retryCount, error);
+        // Axios fails merging this configuration to the default configuration because it has an issue
+        // with circular structures: https://github.com/mzabriskie/axios/issues/370
+        fixConfig(axios, config);
 
-      // Axios fails merging this configuration to the default configuration because it has an issue
-      // with circular structures: https://github.com/mzabriskie/axios/issues/370
-      fixConfig(axios, config);
+        if (!shouldResetTimeout && config.timeout && currentState.lastRequestTime) {
+          const lastRequestDuration = Date.now() - currentState.lastRequestTime;
+          // Minimum 1ms timeout (passing 0 or less to XHR means no timeout)
+          config.timeout = Math.max(config.timeout - lastRequestDuration - delay, 1);
+        }
 
-      if (!shouldResetTimeout && config.timeout && currentState.lastRequestTime) {
-        const lastRequestDuration = Date.now() - currentState.lastRequestTime;
-        // Minimum 1ms timeout (passing 0 or less to XHR means no timeout)
-        config.timeout = Math.max(config.timeout - lastRequestDuration - delay, 1);
+        config.transformRequest = [data => data];
+
+        return new Promise(resolve => setTimeout(() => resolve(axios(config)), delay));
       }
 
-      config.transformRequest = [data => data];
-
-      return new Promise(resolve => setTimeout(() => resolve(axios(config)), delay));
-    }
-
-    return Promise.reject(error);
+      return Promise.reject(error);
+    });
   });
 }
 
