@@ -1,5 +1,5 @@
 {
-  "name": "axios-retry",
+  "name": "axios-retry-async-retrycondition",
   "version": "3.1.1",
   "author": "Rubén Norte <ruben.norte@softonic.com>",
   "description": "Axios plugin that intercepts failed requests and retries them whenever posible.",
