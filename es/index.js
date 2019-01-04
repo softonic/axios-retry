@@ -169,15 +169,17 @@ function fixConfig(axios, config) {
  *        A function to determine if the error can be retried
  * @param {Function} [defaultOptions.retryDelay=noDelay]
  *        A function to determine the delay between retry requests
+ * @returns {Object} An object including the handles of the interceptors,
+          you can use to remove them from axios, { responseHandle, requestHandle }
  */
 export default function axiosRetry(axios, defaultOptions) {
-  axios.interceptors.request.use(config => {
+  const requestHandle = axios.interceptors.request.use(config => {
     const currentState = getCurrentState(config);
     currentState.lastRequestTime = Date.now();
     return config;
   });
 
-  axios.interceptors.response.use(null, error => {
+  const responseHandle = axios.interceptors.response.use(null, error => {
     const config = error.config;
 
     // If we have no information to retry the request
@@ -217,6 +219,8 @@ export default function axiosRetry(axios, defaultOptions) {
 
     return Promise.reject(error);
   });
+
+  return { responseHandle, requestHandle };
 }
 
 // Compatibility with CommonJS
