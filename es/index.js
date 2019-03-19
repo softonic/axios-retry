@@ -39,7 +39,7 @@ export function isSafeRequestError(error) {
     return false;
   }
 
-  return isRetryableError(error) && SAFE_HTTP_METHODS.indexOf(error.config.method) !== -1;
+  return isRetryableError(error) && SAFE_HTTP_METHODS.includes(error.config.method);
 }
 
 /**
@@ -52,7 +52,7 @@ export function isIdempotentRequestError(error) {
     return false;
   }
 
-  return isRetryableError(error) && IDEMPOTENT_HTTP_METHODS.indexOf(error.config.method) !== -1;
+  return isRetryableError(error) && IDEMPOTENT_HTTP_METHODS.includes(error.config.method);
 }
 
 /**
