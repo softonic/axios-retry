@@ -86,9 +86,10 @@ export function exponentialDelay(retryNumber = 0) {
  * @return {Object}
  */
 function getCurrentState(config) {
-  const currentState = config[namespace] || {};
+  // If there is a request-specific configuration, prioritise that over
+  // the default configuration set on the adapter.
+  const currentState = config[namespace] || config.adapter[namespace] || {};
   currentState.retryCount = currentState.retryCount || 0;
-  config[namespace] = currentState;
   return currentState;
 }
 
@@ -174,6 +175,11 @@ export default function axiosRetry(axios, defaultOptions) {
   axios.interceptors.request.use(config => {
     const currentState = getCurrentState(config);
     currentState.lastRequestTime = Date.now();
+    const { adapter: origAdapter } = config;
+    config.adapter = function retryAdapter(adapterConfig) {
+      return origAdapter(adapterConfig);
+    };
+    config.adapter[namespace] = currentState;
     return config;
   });
 
