@@ -177,7 +177,7 @@ export default function axiosRetry(axios, defaultOptions) {
     return config;
   });
 
-  axios.interceptors.response.use(null, error => {
+  axios.interceptors.response.use(null, async error => {
     const config = error.config;
 
     // If we have no information to retry the request
@@ -194,7 +194,7 @@ export default function axiosRetry(axios, defaultOptions) {
 
     const currentState = getCurrentState(config);
 
-    const shouldRetry = retryCondition(error) && currentState.retryCount < retries;
+    const shouldRetry = await retryCondition(error) && currentState.retryCount < retries;
 
     if (shouldRetry) {
       currentState.retryCount += 1;
