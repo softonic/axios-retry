@@ -223,10 +223,13 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         axiosRetry(client, { retries: 3, shouldResetTimeout: true });
 
-        client.get('http://example.com/test', { timeout: 100 }).then(result => {
-          expect(result.status).toBe(200);
-          done();
-        });
+        client
+          .get('http://example.com/test', { timeout: 100 })
+          .then(result => {
+            expect(result.status).toBe(200);
+            done();
+          })
+          .catch(done.fail);
       });
 
       it('should reject with errors without a `config` property without retrying', done => {
@@ -335,38 +338,6 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
       });
     });
   });
-
-  it('should use request-specific configuration', done => {
-    const client = axios.create();
-
-    setupResponses(client, [
-      () =>
-        nock('http://example.com')
-          .get('/test')
-          .replyWithError(NETWORK_ERROR),
-      () =>
-        nock('http://example.com')
-          .get('/test')
-          .replyWithError(NETWORK_ERROR),
-      () =>
-        nock('http://example.com')
-          .get('/test')
-          .reply(200)
-    ]);
-
-    axiosRetry(client, { retries: 0 });
-
-    client
-      .get('http://example.com/test', {
-        'axios-retry': {
-          retries: 2
-        }
-      })
-      .then(result => {
-        expect(result.status).toBe(200);
-        done();
-      }, done.fail);
-  });
 });
 
 describe('axiosRetry(axios, { retries, retryDelay })', () => {
@@ -416,18 +387,21 @@ describe('isNetworkError(error)', () => {
   it('should be true for network errors like connection refused', () => {
     const connectionRefusedError = new Error();
     connectionRefusedError.code = 'ECONNREFUSED';
+
     expect(isNetworkError(connectionRefusedError)).toBe(true);
   });
 
   it('should be false for timeout errors', () => {
     const timeoutError = new Error();
     timeoutError.code = 'ECONNABORTED';
+
     expect(isNetworkError(timeoutError)).toBe(false);
   });
 
   it('should be false for errors with a response', () => {
     const responseError = new Error('Response error');
     responseError.response = { status: 500 };
+
     expect(isNetworkError(responseError)).toBe(false);
   });
 
@@ -442,12 +416,14 @@ describe('isSafeRequestError(error)', () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
       errorResponse.response = { status: 500 };
+
       expect(isSafeRequestError(errorResponse)).toBe(true);
     });
 
     it(`should be true for "${method}" requests without a response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
+
       expect(isSafeRequestError(errorResponse)).toBe(true);
     });
   });
@@ -457,12 +433,14 @@ describe('isSafeRequestError(error)', () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
       errorResponse.response = { status: 500 };
+
       expect(isSafeRequestError(errorResponse)).toBe(false);
     });
 
     it(`should be false for "${method}" requests without a response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
+
       expect(isSafeRequestError(errorResponse)).toBe(false);
     });
   });
@@ -470,6 +448,7 @@ describe('isSafeRequestError(error)', () => {
   it('should be false for errors without a `config`', () => {
     const errorResponse = new Error('Error response');
     errorResponse.response = { status: 500 };
+
     expect(isSafeRequestError(errorResponse)).toBe(false);
   });
 
@@ -477,6 +456,7 @@ describe('isSafeRequestError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.config = { method: 'get' };
     errorResponse.response = { status: 404 };
+
     expect(isSafeRequestError(errorResponse)).toBe(false);
   });
 
@@ -484,6 +464,7 @@ describe('isSafeRequestError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.code = 'ECONNABORTED';
     errorResponse.config = { method: 'get' };
+
     expect(isSafeRequestError(errorResponse)).toBe(false);
   });
 });
@@ -494,12 +475,14 @@ describe('isIdempotentRequestError(error)', () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
       errorResponse.response = { status: 500 };
+
       expect(isIdempotentRequestError(errorResponse)).toBe(true);
     });
 
     it(`should be true for "${method}" requests without a response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
+
       expect(isIdempotentRequestError(errorResponse)).toBe(true);
     });
   });
@@ -509,6 +492,7 @@ describe('isIdempotentRequestError(error)', () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
       errorResponse.response = { status: 500 };
+
       expect(isIdempotentRequestError(errorResponse)).toBe(false);
     });
 
@@ -516,6 +500,7 @@ describe('isIdempotentRequestError(error)', () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
       errorResponse.response = { status: 500 };
+
       expect(isIdempotentRequestError(errorResponse)).toBe(false);
     });
   });
@@ -524,6 +509,7 @@ describe('isIdempotentRequestError(error)', () => {
   it('should be false for errors without a `config`', () => {
     const errorResponse = new Error('Error response');
     errorResponse.response = { status: 500 };
+
     expect(isIdempotentRequestError(errorResponse)).toBe(false);
   });
 
@@ -532,6 +518,7 @@ describe('isIdempotentRequestError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.config = { method: 'get' };
     errorResponse.response = { status: 404 };
+
     expect(isIdempotentRequestError(errorResponse)).toBe(false);
   });
 
@@ -540,6 +527,7 @@ describe('isIdempotentRequestError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.code = 'ECONNABORTED';
     errorResponse.config = { method: 'get' };
+
     expect(isIdempotentRequestError(errorResponse)).toBe(false);
   });
 });
@@ -563,12 +551,14 @@ describe('isRetryableError(error)', () => {
   it('should be false for aborted requests', () => {
     const errorResponse = new Error('Error response');
     errorResponse.code = 'ECONNABORTED';
+
     expect(isRetryableError(errorResponse)).toBe(false);
   });
 
   it('should be true for timeouts', () => {
     const errorResponse = new Error('Error response');
     errorResponse.code = 'ECONNRESET';
+
     expect(isRetryableError(errorResponse)).toBe(true);
   });
 
@@ -576,6 +566,7 @@ describe('isRetryableError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.code = 'ECONNRESET';
     errorResponse.response = { status: 500 };
+
     expect(isRetryableError(errorResponse)).toBe(true);
   });
 
@@ -583,6 +574,7 @@ describe('isRetryableError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.code = 'ECONNRESET';
     errorResponse.response = { status: 400 };
+
     expect(isRetryableError(errorResponse)).toBe(false);
   });
 });

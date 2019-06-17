@@ -1,6 +1,6 @@
 import isRetryAllowed from 'is-retry-allowed';
 
-const namespace = 'axios-retry';
+const namespace = Symbol('axios-retry');
 
 /**
  * @param  {Error}  error
@@ -82,13 +82,13 @@ export function exponentialDelay(retryNumber = 0) {
 
 /**
  * Initializes and returns the retry state for the given request/config
- * @param  {AxiosRequestConfig} config
+ * @param  {AxiosRequestConfig} axios
  * @return {Object}
  */
-function getCurrentState(config) {
-  const currentState = config[namespace] || {};
+function getCurrentState(axios) {
+  const currentState = axios[namespace] || {};
   currentState.retryCount = currentState.retryCount || 0;
-  config[namespace] = currentState;
+  axios[namespace] = currentState;
   return currentState;
 }
 
@@ -172,13 +172,13 @@ function fixConfig(axios, config) {
  */
 export default function axiosRetry(axios, defaultOptions) {
   axios.interceptors.request.use(config => {
-    const currentState = getCurrentState(config);
+    const currentState = getCurrentState(axios);
     currentState.lastRequestTime = Date.now();
     return config;
   });
 
   axios.interceptors.response.use(null, error => {
-    const config = error.config;
+    const { config } = error;
 
     // If we have no information to retry the request
     if (!config) {
@@ -192,7 +192,7 @@ export default function axiosRetry(axios, defaultOptions) {
       shouldResetTimeout = false
     } = getRequestOptions(config, defaultOptions);
 
-    const currentState = getCurrentState(config);
+    const currentState = getCurrentState(axios);
 
     const shouldRetry = retryCondition(error) && currentState.retryCount < retries;
 

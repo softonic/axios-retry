@@ -42,17 +42,6 @@ client.get('/test') // The first request fails and the second returns 'ok'
   .then(result => {
     result.data; // 'ok'
   });
-
-// Allows request-specific configuration
-client
-  .get('/test', {
-    'axios-retry': {
-      retries: 0
-    }
-  })
-  .catch(error => { // The first request fails
-    error !== undefined
-  });
 ```
 
 **Note:** Unless `shouldResetTimeout` is set, the plugin interprets the request timeout as a global value, so it is not used for each retry but for the whole request lifecycle.
