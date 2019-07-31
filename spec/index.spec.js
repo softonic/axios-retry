@@ -41,6 +41,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
   describe('when the response is successful', () => {
     it('should resolve with it', done => {
       const client = axios.create();
+
       setupResponses(client, [
         () =>
           nock('http://example.com')
@@ -54,6 +55,46 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         expect(result.status).toBe(200);
         done();
       }, done.fail);
+    });
+
+    describe('and the user supplies a custom success response handler', () => {
+      it('should use the custom response handler', done => {
+        const client = axios.create();
+
+        setupResponses(client, [
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .reply(200, { error: 'API quota limit exceeded' }),
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .reply(200, { data: 'this is a useful response' })
+        ]);
+
+        function responseSuccessInterceptor(config) {
+          // eslint-disable-next-line
+          console.log(config);
+          return config;
+        }
+
+        let retryCount = 0;
+
+        axiosRetry(client, {
+          retries: 2,
+          retryCondition: () => true,
+          retryDelay: () => {
+            retryCount += 1;
+            return 0;
+          },
+          responseSuccessInterceptor
+        });
+
+        client.get('http://example.com/test').then(() => {
+          expect(retryCount).toBe(1);
+          done();
+        }, done.fail);
+      });
     });
   });
 
