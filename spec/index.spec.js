@@ -57,28 +57,25 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
       }, done.fail);
     });
 
-    describe('and the user supplies a custom success response handler', () => {
-      it('should use the custom response handler', done => {
+    describe('and the user supplies shouldRetrySuccessResponse', () => {
+      it('should use the user-supplied shouldRetrySuccessResponse', done => {
+        function shouldRetrySuccessResponse(response) {
+          return response.errorMessage && response.errorMessage.includes('too many requests');
+        }
+
         const client = axios.create();
+        let retryCount = 0;
 
         setupResponses(client, [
           () =>
             nock('http://example.com')
               .get('/test')
-              .reply(200, { error: 'API quota limit exceeded' }),
+              .reply(200, { errorMessage: 'API rate limit exceeded: too many requests' }),
           () =>
             nock('http://example.com')
               .get('/test')
               .reply(200, { data: 'this is a useful response' })
         ]);
-
-        function responseSuccessInterceptor(config) {
-          // eslint-disable-next-line
-          console.log(config);
-          return config;
-        }
-
-        let retryCount = 0;
 
         axiosRetry(client, {
           retries: 2,
@@ -87,11 +84,12 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
             retryCount += 1;
             return 0;
           },
-          responseSuccessInterceptor
+          shouldRetrySuccessResponse
         });
 
-        client.get('http://example.com/test').then(() => {
+        client.get('http://example.com/test').then(response => {
           expect(retryCount).toBe(1);
+          expect(response.data).toBe('this is a useful response');
           done();
         }, done.fail);
       });
