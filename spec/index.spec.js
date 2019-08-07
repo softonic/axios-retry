@@ -89,7 +89,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         client.get('http://example.com/test').then(response => {
           expect(retryCount).toBe(1);
-          expect(response.data).toBe('this is a useful response');
+          expect(response.data).toEqual({ data: 'this is a useful response' });
           done();
         }, done.fail);
       });

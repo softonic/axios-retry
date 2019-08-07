@@ -73,9 +73,9 @@ function noDelay() {
 /**
  * @return {boolean} - retry successful responses, always false
  */
-// function noRetry() {
-//   return false;
-// }
+function noRetry() {
+  return false;
+}
 
 /**
  * @param  {number} [retryNumber=0]
@@ -222,7 +222,6 @@ export default function axiosRetry(axios, defaultOptions) {
   }
 
   function responseSuccessHandler(response) {
-    console.log(response);
     const config = response.config;
 
     // If we have no information to retry the request
@@ -230,35 +229,36 @@ export default function axiosRetry(axios, defaultOptions) {
       return response;
     }
 
-    // const {
-    //   retries = 3,
-    //   retryCondition = isNetworkOrIdempotentRequestresponse,
-    //   retryDelay = noDelay,
-    //   shouldResetTimeout = false
-    // } = getRequestOptions(config, defaultOptions);
+    const {
+      retries = 3,
+      retryDelay = noDelay,
+      shouldResetTimeout = false,
+      shouldRetrySuccessResponse = noRetry
+    } = getRequestOptions(config, defaultOptions);
 
-    // const currentState = getCurrentState(config);
+    const currentState = getCurrentState(config);
 
-    // const shouldRetry = retryCondition(response) && currentState.retryCount < retries;
+    const shouldRetry =
+      shouldRetrySuccessResponse(response.data) && currentState.retryCount < retries;
 
-    // if (shouldRetry) {
-    //   currentState.retryCount += 1;
-    //   const delay = retryDelay(currentState.retryCount, response);
+    if (shouldRetry) {
+      currentState.retryCount += 1;
+      const delay = retryDelay(currentState.retryCount, response);
 
-    //   // Axios fails merging this configuration to the default configuration because it has an issue
-    //   // with circular structures: https://github.com/mzabriskie/axios/issues/370
-    //   fixConfig(axios, config);
+      // Axios fails merging this configuration to the default configuration because it has an issue
+      // with circular structures: https://github.com/mzabriskie/axios/issues/370
+      fixConfig(axios, config);
 
-    //   if (!shouldResetTimeout && config.timeout && currentState.lastRequestTime) {
-    //     const lastRequestDuration = Date.now() - currentState.lastRequestTime;
-    //     // Minimum 1ms timeout (passing 0 or less to XHR means no timeout)
-    //     config.timeout = Math.max(config.timeout - lastRequestDuration - delay, 1);
-    //   }
+      if (!shouldResetTimeout && config.timeout && currentState.lastRequestTime) {
+        const lastRequestDuration = Date.now() - currentState.lastRequestTime;
+        // Minimum 1ms timeout (passing 0 or less to XHR means no timeout)
+        config.timeout = Math.max(config.timeout - lastRequestDuration - delay, 1);
+      }
 
-    //   config.transformRequest = [data => data];
+      config.transformRequest = [data => data];
 
-    //   return new Promise(resolve => setTimeout(() => resolve(axios(config)), delay));
-    // }
+      return new Promise(resolve => setTimeout(() => resolve(axios(config)), delay));
+    }
 
     return response;
   }
