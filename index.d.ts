@@ -16,6 +16,12 @@ export interface IAxiosRetryConfig {
    */
   shouldResetTimeout?: boolean,
   /**
+   * A function to control if a response with a 200 status code should be retried.
+   * 
+   * @type {Function}
+   */
+  shouldRetrySuccessResponse?: (serverResponseBody: any) => boolean,
+  /**
    * A callback to further control if a request should be retried. By default, it retries if the result did not have a response.
    * default: error => !error.response
    *
