@@ -34,16 +34,14 @@ export interface IAxiosRetry {
   (
     axios: axios.AxiosStatic | axios.AxiosInstance,
     axiosRetryConfig?: IAxiosRetryConfig
-  ): void
+  ): void;
+
+  isNetworkError(error: Error): boolean;
+  isRetryableError(error: Error): boolean;
+  isSafeRequestError(error: Error): boolean;
+  isIdempotentRequestError(error: Error): boolean;
+  isNetworkOrIdempotentRequestError(error: Error): boolean;
+  exponentialDelay(retryNumber: number): number;
 }
 
-declare const axiosRetry: IAxiosRetry
-
-export default axiosRetry
-
-export function isNetworkError(error: Error): boolean;
-export function isRetryableError(error: Error): boolean;
-export function isSafeRequestError(error: Error): boolean;
-export function isIdempotentRequestError(error: Error): boolean;
-export function isNetworkOrIdempotentRequestError(error: Error): boolean;
-export function exponentialDelay(retryNumber: number): number;
+export declare const axiosRetry: IAxiosRetry;
