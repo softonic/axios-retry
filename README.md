@@ -11,7 +11,7 @@ npm install axios-retry
 ```
 
 ### Note
-Not working with `axios 0.19.0`. For details see the [bug](https://github.com/axios/axios/issues/2203).
+Not working with `axios 0.19.0`. For details see the [bug](https://github.com/axios/axios/issues/2203). [`axios 0.19.1`](https://github.com/axios/axios/releases/tag/0.19.1) has fixed this bug.
 
 ## Usage
 
