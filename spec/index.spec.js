@@ -105,39 +105,37 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
       });
 
       it('should not run transformRequest twice', done => {
-        let a;
+        let scope;
         const client = axios.create({
-          transformRequest: [JSON.stringify],
+          transformRequest: [JSON.stringify]
         });
         setupResponses(client, [
-          () =>
-            a = nock('http://example.com')
+          () => {
+            scope = nock('http://example.com')
               .post('/test', body => {
-                throw new Error('a')
-                console.log('a')
                 expect(body.a).toBe('b');
                 return true;
               })
-              .replyWithError(NETWORK_ERROR),
+              .replyWithError(NETWORK_ERROR);
+            return scope;
+          },
           () =>
             nock('http://example.com')
               .post('/test', body => {
-                console.log('b')
                 expect(body.a).toBe('b');
                 return true;
               })
               .reply(200, 'It worked!')
         ]);
-        console.log('http://example.com/test')
-        console.log(a)
 
-       axiosRetry(client, { retries: 1, retryCondition: () => true });
+        axiosRetry(client, { retries: 1, retryCondition: () => true });
+
+        setTimeout(() => console.log(scope.pendingMocks()), 4000); // eslint-disable-line
 
         client.post('http://example.com/test', { a: 'b' }).then(result => {
-                console.log('c')
           expect(result.status).toBe(200);
           done();
-        }, (a) => console.log('d',a) || done.fail());
+        }, done.fail);
       });
 
       it('should reject with a request error if retries <= 0', done => {
