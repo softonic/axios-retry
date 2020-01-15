@@ -14,7 +14,6 @@
   ],
   "scripts": {
     "lint": "eslint es/**/*.js spec/**/*.spec.js",
-    "pretest": "npm run lint",
     "test": "jasmine",
     "prebuild": "npm run test",
     "build": "rm -rf lib && babel es -d lib --source-maps",

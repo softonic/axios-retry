@@ -105,13 +105,16 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
       });
 
       it('should not run transformRequest twice', done => {
+        let a;
         const client = axios.create({
-          transformRequest: [JSON.stringify]
+          transformRequest: [JSON.stringify],
         });
         setupResponses(client, [
           () =>
-            nock('http://example.com')
+            a = nock('http://example.com')
               .post('/test', body => {
+                throw new Error('a')
+                console.log('a')
                 expect(body.a).toBe('b');
                 return true;
               })
@@ -119,18 +122,22 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
           () =>
             nock('http://example.com')
               .post('/test', body => {
+                console.log('b')
                 expect(body.a).toBe('b');
                 return true;
               })
               .reply(200, 'It worked!')
         ]);
+        console.log('http://example.com/test')
+        console.log(a)
 
-        axiosRetry(client, { retries: 1, retryCondition: () => true });
+       axiosRetry(client, { retries: 1, retryCondition: () => true });
 
         client.post('http://example.com/test', { a: 'b' }).then(result => {
+                console.log('c')
           expect(result.status).toBe(200);
           done();
-        }, done.fail);
+        }, (a) => console.log('d',a) || done.fail());
       });
 
       it('should reject with a request error if retries <= 0', done => {
@@ -195,8 +202,8 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         axiosRetry(client, { retries: 3 });
 
-        client.get('http://example.com/test', { timeout: 100 }).then(done.fail, error => {
-          expect(error.code).toBe('ECONNABORTED');
+        client.get('http://example.com/test', { timeout: 100 }).then(resp => {
+          expect(resp.status).toBe(200);
           done();
         });
       });
