@@ -47,7 +47,7 @@
     "husky": "^0.14.3",
     "jasmine": "^2.4.1",
     "lint-staged": "^7.1.2",
-    "nock": "^8.0.0",
+    "nock": "^11.7.2",
     "prettier": "^1.12.1"
   },
   "repository": {
