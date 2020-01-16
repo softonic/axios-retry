@@ -195,8 +195,8 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         axiosRetry(client, { retries: 3 });
 
-        client.get('http://example.com/test', { timeout: 100 }).then(resp => {
-          expect(resp.status).toBe(200);
+        client.get('http://example.com/test', { timeout: 100 }).then(done.fail, error => {
+          expect(error.code).toBe('ECONNABORTED');
           done();
         });
       });
