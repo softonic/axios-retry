@@ -397,7 +397,7 @@ describe('axiosRetry(axios, { retries, retryDelay })', () => {
 
       axiosRetry(client, {
         retries: 4,
-        retryCondition: () => true,
+        retryCondition: response => response.code === NETWORK_ERROR.code,
         retryDelay: () => {
           retryCount += 1;
           return 0;
