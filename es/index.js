@@ -172,6 +172,7 @@ function fixConfig(axios, config) {
  */
 export default function axiosRetry(axios, defaultOptions) {
   axios.interceptors.request.use(config => {
+    if (!config) return
     const currentState = getCurrentState(config);
     currentState.lastRequestTime = Date.now();
     return config;
