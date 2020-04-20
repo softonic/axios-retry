@@ -3,7 +3,7 @@ import * as axios from 'axios'
 interface IAxiosRetry {
   (
     axios: axios.AxiosStatic | axios.AxiosInstance,
-    axiosRetryConfig?: IAxiosRetryConfig
+    axiosRetryConfig?: IAxiosRetry.IAxiosRetryConfig
   ): void;
 
   isNetworkError(error: Error): boolean;
