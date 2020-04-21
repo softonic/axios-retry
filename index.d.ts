@@ -48,4 +48,6 @@ declare namespace IAxiosRetry {
 
 declare const axiosRetry: IAxiosRetry;
 
+export type IAxiosRetryConfig = IAxiosRetry.IAxiosRetryConfig;
+
 export = axiosRetry;
