@@ -50,4 +50,4 @@ declare const axiosRetry: IAxiosRetry;
 
 export type IAxiosRetryConfig = IAxiosRetry.IAxiosRetryConfig;
 
-export = axiosRetry;
+export default axiosRetry;
