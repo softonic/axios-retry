@@ -5,26 +5,75 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [3.0.3] - 2018-04-26
+## [3.1.7] - 2019-04-23
 
-### Fixed
+### Fixed
 
-- Export isRetryableError for CommonJS
+- Fixed default export to resolve TS2309
+- Updated dependencies to fix build error
+- Added missing CHANGELOG entries (versions 3.0.1 until today)
+
+## [3.1.6] - 2019-04-21
+
+### Fixed
+
+- Fixed export of `IAxiosRetryConfig`
+
+## [3.1.5] - 2019-04-20
+
+### Fixed
+
+- Fixed TS definitions
+
+## [3.1.4] - 2019-04-18
+
+### Fixed
+
+- Fixed TS definitions
 
 ### Added
 
-- Added additional param shouldResetTimeout
+- Added note in README related to compatibility issue with `axios 0.19.0`
+- Updated LICENSE
+
+## [3.1.2] - 2019-01-24
+
+### Added
+
+- TravisCI build status badge in README
+- Update `index.d.ts` with missing functions
+
+## [3.1.1] - 2018-06-13
+
+### Fixed
+
+- Do not run `requestTransform` again after retry
+
+### Added
+
+- Explicit return type on `axiosRetry`
+- Prettier
+
+## [3.1.0] - 2018-04-26
+
+### Fixed
+
+- Export `isRetryableError` for CommonJS
+
+### Added
+
+- Added additional param `shouldResetTimeout`
 
 ## [3.0.2] - 2018-02-09
 
 ### Added
 
-- Now isRetryableError method is accessible.
-- Added delayStrategy option to be able to have exponential backoff for successive retries.
+- Now `isRetryableError` method is accessible.
+- Added `delayStrategy` option to be able to have exponential backoff for successive retries.
 
 ## [3.0.1] - 2017-08-16
 
-### Fixed
+### Fixed
 
 - Fixed first request time not being taken into account in timeout across retries.
 - Fixed negative timeouts being passed to XHR (browsers), causing that no timeout was applied.
@@ -40,7 +89,7 @@ along with safe network errors.
 custom function that overwrites them. The conditions that verify that the error is not a timeout or
 an unsafe network error have been moved to `isNetworkError`.
 
-### Added
+### Added
 
 - Added additional pre-defined retry conditions: `isSafeRequestError`, `isIdempotentRequestError`.
 
