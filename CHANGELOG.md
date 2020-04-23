@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
-- Fixed export of `IAxiosRetryConfig`
+- Fixed export of `IAxiosRetryConfig`
 
 ## [3.1.5] - 2019-04-20
 
