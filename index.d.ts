@@ -58,3 +58,9 @@ declare const axiosRetry: IAxiosRetry;
 export type IAxiosRetryConfig = IAxiosRetry.IAxiosRetryConfig;
 
 export default axiosRetry;
+
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    'axios-retry'?: IAxiosRetryConfig;
+  }
+}
