@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.1.9] - 2020-09-18
+
+### Fixed
+
+- TS: extended AxiosRequestConfig with optional "axios-retry" property
+
 ## [3.1.8] - 2019-04-24
 
 ### Fixed
