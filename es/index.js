@@ -25,7 +25,9 @@ const IDEMPOTENT_HTTP_METHODS = SAFE_HTTP_METHODS.concat(['put', 'delete']);
 export function isRetryableError(error) {
   return (
     error.code !== 'ECONNABORTED' &&
-    (!error.response || (error.response.status >= 500 && error.response.status <= 599))
+    (!error.response ||
+      (error.response.status >= 500 && error.response.status <= 599) ||
+      error.response.status === 429)
   );
 }
 
@@ -78,6 +80,21 @@ export function exponentialDelay(retryNumber = 0) {
   const delay = Math.pow(2, retryNumber) * 100;
   const randomSum = delay * 0.2 * Math.random(); // 0-20% of the delay
   return delay + randomSum;
+}
+
+/**
+ * @param  {number} [retryNumber]
+ * @param  {Error}  [error]
+ * @return {number} - delay in milliseconds
+ */
+export function retryAfter(retryNumber, error) {
+  if (error.response) {
+    const retry_after = error.response.headers["retry-after"];
+    if (retry_after) {
+      return retry_after;
+    }
+  }
+  return 0;
 }
 
 /**
@@ -140,6 +157,23 @@ function fixConfig(axios, config) {
  *   return retryCount * 1000;
  * }});
  *
+ * // Custom retry which checks Retry-After header against limit
+ * axiosRetry(axios, { retryDelay : (retryCount, error) => {
+ *   if (error.response) {
+ *     const retry_after = error.response.headers["retry-after"];
+ *     if (retry_after) {
+ *       // check if retry is less than 5 seconds
+ *       if (retry_after < 5) {
+ *         return retry_after;
+ *       } else {
+ *         // return negative value to prevent retry
+ *         return -1;
+         }
+ *     }
+ *   }
+ *   return 0;
+ * }});
+ *
  * // Also works with custom axios instances
  * const client = axios.create({ baseURL: 'http://example.com' });
  * axiosRetry(client, { retries: 3 });
@@ -199,20 +233,21 @@ export default function axiosRetry(axios, defaultOptions) {
     if (shouldRetry) {
       currentState.retryCount += 1;
       const delay = retryDelay(currentState.retryCount, error);
+      if (delay >= 0) {
+        // Axios fails merging this configuration to the default configuration because it has an issue
+        // with circular structures: https://github.com/mzabriskie/axios/issues/370
+        fixConfig(axios, config);
 
-      // Axios fails merging this configuration to the default configuration because it has an issue
-      // with circular structures: https://github.com/mzabriskie/axios/issues/370
-      fixConfig(axios, config);
+        if (!shouldResetTimeout && config.timeout && currentState.lastRequestTime) {
+          const lastRequestDuration = Date.now() - currentState.lastRequestTime;
+          // Minimum 1ms timeout (passing 0 or less to XHR means no timeout)
+          config.timeout = Math.max(config.timeout - lastRequestDuration - delay, 1);
+        }
 
-      if (!shouldResetTimeout && config.timeout && currentState.lastRequestTime) {
-        const lastRequestDuration = Date.now() - currentState.lastRequestTime;
-        // Minimum 1ms timeout (passing 0 or less to XHR means no timeout)
-        config.timeout = Math.max(config.timeout - lastRequestDuration - delay, 1);
+        config.transformRequest = [data => data];
+
+        return new Promise((resolve) => setTimeout(() => resolve(axios(config)), delay));
       }
-
-      config.transformRequest = [data => data];
-
-      return new Promise(resolve => setTimeout(() => resolve(axios(config)), delay));
     }
 
     return Promise.reject(error);
@@ -225,4 +260,5 @@ axiosRetry.isSafeRequestError = isSafeRequestError;
 axiosRetry.isIdempotentRequestError = isIdempotentRequestError;
 axiosRetry.isNetworkOrIdempotentRequestError = isNetworkOrIdempotentRequestError;
 axiosRetry.exponentialDelay = exponentialDelay;
+axiosRetry.retryAfter = retryAfter;
 axiosRetry.isRetryableError = isRetryableError;
