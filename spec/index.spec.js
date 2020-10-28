@@ -586,3 +586,64 @@ describe('isRetryableError(error)', () => {
     expect(isRetryableError(errorResponse)).toBe(false);
   });
 });
+
+describe('axiosRetry(axios, { retries, retryCondition: custom response })', () => {
+  afterEach(() => {
+    nock.cleanAll();
+    nock.enableNetConnect();
+  });
+
+  describe('when the response is an error', () => {
+    it('should resolves with response returned by `retryCondition`', done => {
+      const client = axios.create();
+      setupResponses(client, [
+        () =>
+          nock('http://example.com')
+            .get('/test')
+            .replyWithError(NETWORK_ERROR),
+        () =>
+          nock('http://example.com')
+            .get('/alternative')
+            .reply(200, 'It worked!')
+      ]);
+
+      const retryCondition = () => client.get('http://example.com/alternative');
+
+      axiosRetry(client, { retries: 1, retryCondition });
+
+      client.get('http://example.com/test').then(result => {
+        expect(result.status).toBe(200);
+        done();
+      });
+    });
+
+    it('should have access to context', done => {
+      const client = axios.create();
+      setupResponses(client, [
+        () =>
+          nock('http://example.com')
+            .get('/test')
+            .replyWithError(NETWORK_ERROR),
+        () =>
+          nock('http://example.com')
+            .get('/test')
+            .reply(200, 'It worked!')
+      ]);
+
+      const retryCondition = (_error, context) => {
+        context.testFn('From retryCondition');
+        return true;
+      };
+
+      axiosRetry(client, { retries: 1, retryCondition });
+      const context = { testFn: () => {} };
+      const contextSpy = spyOn(context, 'testFn');
+
+      client.get('http://example.com/test', { 'axios-retry': { context } }).then(result => {
+        expect(result.status).toBe(200);
+        expect(contextSpy).toHaveBeenCalledWith('From retryCondition');
+        done();
+      }, done.fail);
+    });
+  });
+});

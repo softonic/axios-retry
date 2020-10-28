@@ -16,6 +16,7 @@
     "lint": "eslint es/**/*.js spec/**/*.spec.js",
     "pretest": "npm run lint",
     "test": "jasmine",
+    "test:watch": "nodemon -e js --exec 'npm run test'",
     "prebuild": "npm run test",
     "build": "rm -rf lib && babel es -d lib --source-maps",
     "prerelease": "npm run build",
@@ -48,6 +49,7 @@
     "jasmine": "^2.4.1",
     "lint-staged": "^7.1.2",
     "nock": "^8.0.0",
+    "nodemon": "^2.0.6",
     "prettier": "^1.12.1"
   },
   "repository": {

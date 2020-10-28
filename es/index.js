@@ -169,6 +169,8 @@ function fixConfig(axios, config) {
  *        A function to determine if the error can be retried
  * @param {Function} [defaultOptions.retryDelay=noDelay]
  *        A function to determine the delay between retry requests
+ * @param {Object} [defaultOptions.context={}]
+ *        A context object that will be passed as second argument to retryCondition function
  */
 export default function axiosRetry(axios, defaultOptions) {
   axios.interceptors.request.use(config => {
@@ -177,26 +179,28 @@ export default function axiosRetry(axios, defaultOptions) {
     return config;
   });
 
-  axios.interceptors.response.use(null, error => {
+  // eslint-disable-next-line complexity
+  axios.interceptors.response.use(null, async error => {
     const config = error.config;
 
     // If we have no information to retry the request
     if (!config) {
-      return Promise.reject(error);
+      throw error;
     }
 
     const {
       retries = 3,
       retryCondition = isNetworkOrIdempotentRequestError,
       retryDelay = noDelay,
-      shouldResetTimeout = false
+      shouldResetTimeout = false,
+      context = {}
     } = getRequestOptions(config, defaultOptions);
 
     const currentState = getCurrentState(config);
 
-    const shouldRetry = retryCondition(error) && currentState.retryCount < retries;
+    const shouldRetry = currentState.retryCount < retries && (await retryCondition(error, context));
 
-    if (shouldRetry) {
+    if (shouldRetry && typeof shouldRetry === 'boolean') {
       currentState.retryCount += 1;
       const delay = retryDelay(currentState.retryCount, error);
 
@@ -213,9 +217,11 @@ export default function axiosRetry(axios, defaultOptions) {
       config.transformRequest = [data => data];
 
       return new Promise(resolve => setTimeout(() => resolve(axios(config)), delay));
+    } else if (shouldRetry) {
+      return shouldRetry;
     }
 
-    return Promise.reject(error);
+    throw error;
   });
 }
 
