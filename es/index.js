@@ -116,6 +116,9 @@ function fixConfig(axios, config) {
   if (axios.defaults.httpsAgent === config.httpsAgent) {
     delete config.httpsAgent;
   }
+  if (config.baseURL) {
+    config.url = config.url.replace(config.baseURL, '');
+  }
 }
 
 /**
