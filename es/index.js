@@ -25,7 +25,9 @@ const IDEMPOTENT_HTTP_METHODS = SAFE_HTTP_METHODS.concat(['put', 'delete']);
 export function isRetryableError(error) {
   return (
     error.code !== 'ECONNABORTED' &&
-    (!error.response || (error.response.status >= 500 && error.response.status <= 599))
+    (!error.response ||
+      error.response.status === 408 ||
+      (error.response.status >= 500 && error.response.status <= 599))
   );
 }
 
