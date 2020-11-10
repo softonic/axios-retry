@@ -437,7 +437,7 @@ describe('isNetworkError(error)', () => {
 });
 
 describe('isSafeRequestError(error)', () => {
-  ['get', 'head', 'options'].forEach(method => {
+  ['get', 'GET', 'head', 'options'].forEach(method => {
     it(`should be true for "${method}" requests with a 5xx response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
@@ -452,7 +452,7 @@ describe('isSafeRequestError(error)', () => {
     });
   });
 
-  ['post', 'put', 'patch', 'delete'].forEach(method => {
+  ['post', 'POST', 'put', 'patch', 'delete'].forEach(method => {
     it(`should be false for "${method}" requests with a 5xx response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
@@ -489,7 +489,7 @@ describe('isSafeRequestError(error)', () => {
 });
 
 describe('isIdempotentRequestError(error)', () => {
-  ['get', 'head', 'options', 'put', 'delete'].forEach(method => {
+  ['get', 'GET', 'head', 'options', 'put', 'delete'].forEach(method => {
     it(`should be true for "${method}" requests with a 5xx response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
@@ -504,7 +504,7 @@ describe('isIdempotentRequestError(error)', () => {
     });
   });
 
-  ['post', 'patch'].forEach(method => {
+  ['post', 'POST', 'patch'].forEach(method => {
     it(`should be false for "${method}" requests with a 5xx response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };

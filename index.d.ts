@@ -61,6 +61,13 @@ export default axiosRetry;
 
 declare module 'axios' {
   export interface AxiosRequestConfig {
-    'axios-retry'?: IAxiosRetryConfig;
+    'axios-retry'?: IAxiosRetryConfig & {
+      /**
+       * The current attempt we are on. Zero indexed.
+       * 
+       * @type {number}
+       */
+      retryCount?: number;
+    };
   }
 }
