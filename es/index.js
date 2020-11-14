@@ -91,7 +91,18 @@ export function retryAfter(retryNumber, error) {
   if (error.response) {
     const retry_after = error.response.headers["retry-after"];
     if (retry_after) {
-      return retry_after;
+      const retry_after_secs = parseInt(retry_after, 10);
+      if (!isNaN(retry_after_secs)) {
+        return retry_after_secs * 1000;
+      } else {
+        const retry_date_ms = Date.parse(retry_after);
+        if (isNaN(retry_date_ms)) {
+          throw Error("Unexpected Retry-After value: " + retry_date_ms);
+        }
+
+        const delta_ms = retry_date_ms - Date.now();
+        return delta_ms;
+      }
     }
   }
   return 0;
@@ -162,13 +173,26 @@ function fixConfig(axios, config) {
  *   if (error.response) {
  *     const retry_after = error.response.headers["retry-after"];
  *     if (retry_after) {
+ *       let retry_after_ms = 0;
+ *       const retry_after_secs = parseInt(retry_after, 10);
+ *       if (!isNaN(retry_after_secs)) {
+ *         retry_after_ms = retry_after_secs * 1000;
+ *       } else {
+ *         const retry_date_ms = Date.parse(retry_after);
+ *         if (isNaN(retry_date_ms)) {
+ *           throw Error("Unexpected Retry-After value: " + retry_date_ms);
+ *         }
+ * 
+ *         retry_after_ms = retry_date_ms - Date.now();
+ *       }
+ * 
  *       // check if retry is less than 5 seconds
- *       if (retry_after < 5) {
- *         return retry_after;
+ *       if (retry_after_ms <= 5000) {
+ *         return retry_after_ms;
  *       } else {
  *         // return negative value to prevent retry
  *         return -1;
-         }
+ *       }
  *     }
  *   }
  *   return 0;
