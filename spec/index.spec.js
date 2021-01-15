@@ -143,7 +143,10 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
               .replyWithError(NETWORK_ERROR)
         ]);
 
-        axiosRetry(client, { retries: 0, retryCondition: () => {} });
+        axiosRetry(client, {
+          retries: 0,
+          retryCondition: () => {}
+        });
 
         client.get('http://example.com/test').then(done.fail, error => {
           expect(error).toBe(NETWORK_ERROR);
@@ -408,6 +411,85 @@ describe('axiosRetry(axios, { retries, retryDelay })', () => {
         expect(retryCount).toBe(3);
         done();
       }, done.fail);
+    });
+  });
+});
+
+describe('axiosRetry(axios, { retries, onRetry })', () => {
+  afterEach(() => {
+    nock.cleanAll();
+    nock.enableNetConnect();
+  });
+
+  describe('axiosRetry(axios, { retries, onRetry })', () => {
+    afterEach(() => {
+      nock.cleanAll();
+      nock.enableNetConnect();
+    });
+
+    describe('when the onRetry is handled', () => {
+      it('should resolve with correct number of retries', done => {
+        const client = axios.create();
+        setupResponses(client, [
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .reply(500, 'Failed!')
+        ]);
+
+        let retryCalled = 0;
+        let finalRetryCount = 0;
+        const onRetry = (retryCount, err, requestConfig) => {
+          retryCalled += 1;
+          finalRetryCount = retryCount;
+          // eslint-disable-next-line no-unused-expressions
+          expect(err !== undefined).toBe(true);
+          // eslint-disable-next-line no-unused-expressions
+          expect(requestConfig !== undefined).toBe(true);
+        };
+
+        axiosRetry(client, { retries: 2, onRetry });
+
+        client.get('http://example.com/test').catch(() => {
+          expect(retryCalled).toBe(2);
+          expect(finalRetryCount).toBe(2);
+          done();
+        });
+      });
+      it('should use onRetry set on request', done => {
+        const client = axios.create();
+        setupResponses(client, [
+          () =>
+            nock('http://example.com')
+              .get('/test')
+              .reply(500, 'Failed!')
+        ]);
+
+        let retryCalled = 0;
+        let finalRetryCount = 0;
+        const onRetry = (retryCount, err, requestConfig) => {
+          retryCalled += 1;
+          finalRetryCount = retryCount;
+          // eslint-disable-next-line no-unused-expressions
+          expect(err !== undefined).toBe(true);
+          // eslint-disable-next-line no-unused-expressions
+          expect(requestConfig !== undefined).toBe(true);
+        };
+
+        axiosRetry(client, { retries: 2 });
+
+        client
+          .get('http://example.com/test', {
+            'axios-retry': {
+              onRetry
+            }
+          })
+          .catch(() => {
+            expect(retryCalled).toBe(2);
+            expect(finalRetryCount).toBe(2);
+            done();
+          });
+      });
     });
   });
 });
