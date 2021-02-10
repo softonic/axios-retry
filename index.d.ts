@@ -43,7 +43,7 @@ declare namespace IAxiosRetry {
      *
      * @type {Function}
      */
-    retryCondition?: (error: axios.AxiosError) => boolean,
+    retryCondition?: (error: axios.AxiosError) => boolean | Promise<boolean>,
     /**
      * A callback to further control the delay between retry requests. By default there is no delay.
      *

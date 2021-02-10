@@ -57,7 +57,7 @@ export function isIdempotentRequestError(error) {
 
 /**
  * @param  {Error}  error
- * @return {boolean}
+ * @return {boolean | Promise}
  */
 export function isNetworkOrIdempotentRequestError(error) {
   return isNetworkError(error) || isIdempotentRequestError(error);
@@ -119,6 +119,29 @@ function fixConfig(axios, config) {
 }
 
 /**
+ * Checks retryCondition if request can be retried. Handles it's retruning value or Promise.
+ * @param  {number} retries
+ * @param  {Function} retryCondition
+ * @param  {Object} currentState
+ * @param  {Error} error
+ * @return {boolean}
+ */
+async function shouldRetry(retries, retryCondition, currentState, error) {
+  const shouldRetryOrPromise = currentState.retryCount < retries && retryCondition(error);
+
+  // This could be a promise
+  if (typeof shouldRetryOrPromise === 'object') {
+    try {
+      await shouldRetryOrPromise;
+      return true;
+    } catch (_err) {
+      return false;
+    }
+  }
+  return shouldRetryOrPromise;
+}
+
+/**
  * Adds response interceptors to an axios instance to retry requests failed due to network issues
  *
  * @example
@@ -177,7 +200,7 @@ export default function axiosRetry(axios, defaultOptions) {
     return config;
   });
 
-  axios.interceptors.response.use(null, error => {
+  axios.interceptors.response.use(null, async error => {
     const config = error.config;
 
     // If we have no information to retry the request
@@ -194,9 +217,7 @@ export default function axiosRetry(axios, defaultOptions) {
 
     const currentState = getCurrentState(config);
 
-    const shouldRetry = retryCondition(error) && currentState.retryCount < retries;
-
-    if (shouldRetry) {
+    if (await shouldRetry(retries, retryCondition, currentState, error)) {
       currentState.retryCount += 1;
       const delay = retryDelay(currentState.retryCount, error);
 
