@@ -217,6 +217,8 @@ export default function axiosRetry(axios, defaultOptions) {
 
     return Promise.reject(error);
   });
+  
+  return axios;
 }
 
 // Compatibility with CommonJS
