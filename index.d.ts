@@ -31,6 +31,13 @@ declare namespace IAxiosRetry {
      */
     retries?: number,
     /**
+     * The number of times the request has already failed
+     * default: 0
+     *
+     * @type {number}
+     */    
+    retryCount?: number,
+    /**
      * Defines if the timeout should be reset between retries
      * default: false
      *
