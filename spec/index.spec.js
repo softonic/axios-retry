@@ -310,6 +310,35 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
           done();
         }, done.fail);
       });
+
+      describe('when retry condition is returning a promise', () => {
+        it('should resolve with a successful retry as usual', done => {
+          const client = axios.create();
+          setupResponses(client, [
+            () =>
+              nock('http://example.com')
+                .get('/test')
+                .replyWithError(NETWORK_ERROR),
+            () =>
+              nock('http://example.com')
+                .get('/test')
+                .reply(200, 'It worked!')
+          ]);
+
+          axiosRetry(client, {
+            retries: 1,
+            retryCondition: () =>
+              new Promise(res => {
+                res();
+              })
+          });
+
+          client.get('http://example.com/test').then(result => {
+            expect(result.status).toBe(200);
+            done();
+          }, done.fail);
+        });
+      });
     });
 
     describe('when it does NOT satisfy the retry condition', () => {
@@ -331,6 +360,32 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         client.get('http://example.com/test').then(done.fail, error => {
           expect(error).toBe(NETWORK_ERROR);
           done();
+        });
+      });
+
+      describe('given as promise', () => {
+        it('should reject with the error', done => {
+          const client = axios.create();
+          setupResponses(client, [
+            () =>
+              nock('http://example.com')
+                .get('/test')
+                .replyWithError(NETWORK_ERROR),
+            () =>
+              nock('http://example.com')
+                .get('/test')
+                .reply(200, 'It worked!')
+          ]);
+
+          axiosRetry(client, {
+            retries: 1,
+            retryCondition: () => new Promise((_resolve, reject) => reject())
+          });
+
+          client.get('http://example.com/test').then(done.fail, error => {
+            expect(error).toBe(NETWORK_ERROR);
+            done();
+          });
         });
       });
     });
