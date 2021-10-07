@@ -22,13 +22,14 @@
     "release": "npm version -m \"New version: %s\"",
     "postrelease": "npm run push && npm publish",
     "push": "git push origin master && git push origin --tags",
-    "precommit": "lint-staged"
+    "prepare": "husky install"
   },
   "lint-staged": {
-    "*.+(js|jsx|scss)": [
-      "prettier --write",
-      "git add"
-    ]
+    "*.+(js|mjs)": [
+      "eslint --cache --fix",
+      "prettier --write"
+    ],
+    "*.js": "eslint --cache --fix"
   },
   "dependencies": {
     "is-retry-allowed": "^1.1.0"
@@ -44,9 +45,9 @@
     "eslint-plugin-import": "^2.24.2",
     "eslint-plugin-jasmine": "^4.1.2",
     "eslint-plugin-prettier": "^4.0.0",
-    "husky": "^0.14.3",
+    "husky": "^7.0.2",
     "jasmine": "^3.9.0",
-    "lint-staged": "^7.1.2",
+    "lint-staged": "^11.2.0",
     "nock": "^8.0.0",
     "prettier": "^2.4.1"
   },
