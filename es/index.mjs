@@ -99,7 +99,7 @@ function getCurrentState(config) {
  * @return {AxiosRetryConfig}
  */
 function getRequestOptions(config, defaultOptions) {
-  return Object.assign({}, defaultOptions, config[namespace]);
+  return { ...defaultOptions, ...config[namespace] };
 }
 
 /**
@@ -194,14 +194,14 @@ async function shouldRetry(retries, retryCondition, currentState, error) {
  *        A function to determine the delay between retry requests
  */
 export default function axiosRetry(axios, defaultOptions) {
-  axios.interceptors.request.use(config => {
+  axios.interceptors.request.use((config) => {
     const currentState = getCurrentState(config);
     currentState.lastRequestTime = Date.now();
     return config;
   });
 
-  axios.interceptors.response.use(null, async error => {
-    const config = error.config;
+  axios.interceptors.response.use(null, async (error) => {
+    const { config } = error;
 
     // If we have no information to retry the request
     if (!config) {
@@ -231,9 +231,9 @@ export default function axiosRetry(axios, defaultOptions) {
         config.timeout = Math.max(config.timeout - lastRequestDuration - delay, 1);
       }
 
-      config.transformRequest = [data => data];
+      config.transformRequest = [(data) => data];
 
-      return new Promise(resolve => setTimeout(() => resolve(axios(config)), delay));
+      return new Promise((resolve) => setTimeout(() => resolve(axios(config)), delay));
     }
 
     return Promise.reject(error);
