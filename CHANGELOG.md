@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.2.2] - 2021-10-14
+
+- fix: added missing @babel/runtime runtime dep
+
 ## [3.2.1] - 2021-10-14
 
 - updated all dependencies
