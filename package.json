@@ -31,6 +31,7 @@
     "*.js": "eslint --cache --fix"
   },
   "dependencies": {
+    "@babel/runtime": "^7.15.4",
     "is-retry-allowed": "^2.2.0"
   },
   "peerDependencies": {
