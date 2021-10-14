@@ -1,6 +1,6 @@
 # axios-retry
 
-[![Build Status](https://travis-ci.org/softonic/axios-retry.svg?branch=master)](https://travis-ci.org/softonic/axios-retry)
+[![Node.js CI](https://github.com/softonic/axios-retry/actions/workflows/node.js.yml/badge.svg)](https://github.com/softonic/axios-retry/actions/workflows/node.js.yml)
 
 Axios plugin that intercepts failed requests and retries them whenever possible.
 
