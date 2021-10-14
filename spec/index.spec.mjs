@@ -20,11 +20,11 @@ function setupResponses(client, responses) {
     }
   };
   client.interceptors.response.use(
-    result => {
+    (result) => {
       configureResponse();
       return result;
     },
-    error => {
+    (error) => {
       configureResponse();
       return Promise.reject(error);
     }
@@ -39,18 +39,15 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
   });
 
   describe('when the response is successful', () => {
-    it('should resolve with it', done => {
+    it('should resolve with it', (done) => {
       const client = axios.create();
       setupResponses(client, [
-        () =>
-          nock('http://example.com')
-            .get('/test')
-            .reply(200, 'It worked!')
+        () => nock('http://example.com').get('/test').reply(200, 'It worked!')
       ]);
 
       axiosRetry(client, { retries: 0 });
 
-      client.get('http://example.com/test').then(result => {
+      client.get('http://example.com/test').then((result) => {
         expect(result.status).toBe(200);
         done();
       }, done.fail);
@@ -58,20 +55,14 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
   });
 
   describe('when the response is an error', () => {
-    it('should check if it satisfies the `retryCondition`', done => {
+    it('should check if it satisfies the `retryCondition`', (done) => {
       const client = axios.create();
       setupResponses(client, [
-        () =>
-          nock('http://example.com')
-            .get('/test')
-            .replyWithError(NETWORK_ERROR),
-        () =>
-          nock('http://example.com')
-            .get('/test')
-            .reply(200, 'It worked!')
+        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+        () => nock('http://example.com').get('/test').reply(200, 'It worked!')
       ]);
 
-      const retryCondition = error => {
+      const retryCondition = (error) => {
         expect(error).toBe(NETWORK_ERROR);
         done();
         return false;
@@ -83,42 +74,36 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
     });
 
     describe('when it satisfies the retry condition', () => {
-      it('should resolve with a successful retry', done => {
+      it('should resolve with a successful retry', (done) => {
         const client = axios.create();
         setupResponses(client, [
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .replyWithError(NETWORK_ERROR),
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .reply(200, 'It worked!')
+          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').reply(200, 'It worked!')
         ]);
 
         axiosRetry(client, { retries: 1, retryCondition: () => true });
 
-        client.get('http://example.com/test').then(result => {
+        client.get('http://example.com/test').then((result) => {
           expect(result.status).toBe(200);
           done();
         }, done.fail);
       });
 
-      it('should not run transformRequest twice', done => {
+      it('should not run transformRequest twice', (done) => {
         const client = axios.create({
           transformRequest: [JSON.stringify]
         });
         setupResponses(client, [
           () =>
             nock('http://example.com')
-              .post('/test', body => {
+              .post('/test', (body) => {
                 expect(body.a).toBe('b');
                 return true;
               })
               .replyWithError(NETWORK_ERROR),
           () =>
             nock('http://example.com')
-              .post('/test', body => {
+              .post('/test', (body) => {
                 expect(body.a).toBe('b');
                 return true;
               })
@@ -127,120 +112,86 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         axiosRetry(client, { retries: 1, retryCondition: () => true });
 
-        client.post('http://example.com/test', { a: 'b' }).then(result => {
+        client.post('http://example.com/test', { a: 'b' }).then((result) => {
           expect(result.status).toBe(200);
           done();
         }, done.fail);
       });
 
-      it('should reject with a request error if retries <= 0', done => {
+      it('should reject with a request error if retries <= 0', (done) => {
         const client = axios.create();
 
         setupResponses(client, [
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .replyWithError(NETWORK_ERROR)
+          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR)
         ]);
 
         axiosRetry(client, { retries: 0, retryCondition: () => {} });
 
-        client.get('http://example.com/test').then(done.fail, error => {
+        client.get('http://example.com/test').then(done.fail, (error) => {
           expect(error).toBe(NETWORK_ERROR);
           done();
         });
       });
 
-      it('should reject with a request error if there are more errors than retries', done => {
+      it('should reject with a request error if there are more errors than retries', (done) => {
         const client = axios.create();
 
         setupResponses(client, [
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .replyWithError(new Error('foo error')),
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .replyWithError(NETWORK_ERROR)
+          () => nock('http://example.com').get('/test').replyWithError(new Error('foo error')),
+          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR)
         ]);
 
         axiosRetry(client, { retries: 1, retryCondition: () => true });
 
-        client.get('http://example.com/test').then(done.fail, error => {
+        client.get('http://example.com/test').then(done.fail, (error) => {
           expect(error).toBe(NETWORK_ERROR);
           done();
         });
       });
 
-      it('should honor the original `timeout` across retries', done => {
+      it('should honor the original `timeout` across retries', (done) => {
         const client = axios.create();
 
         setupResponses(client, [
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .delay(75)
-              .replyWithError(NETWORK_ERROR),
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .delay(75)
-              .replyWithError(NETWORK_ERROR),
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .reply(200)
+          () => nock('http://example.com').get('/test').delay(75).replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').delay(75).replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').reply(200)
         ]);
 
         axiosRetry(client, { retries: 3 });
 
-        client.get('http://example.com/test', { timeout: 100 }).then(done.fail, error => {
+        client.get('http://example.com/test', { timeout: 100 }).then(done.fail, (error) => {
           expect(error.code).toBe('ECONNABORTED');
           done();
         });
       });
 
-      it('should reset the original `timeout` between requests', done => {
+      it('should reset the original `timeout` between requests', (done) => {
         const client = axios.create();
 
         setupResponses(client, [
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .delay(75)
-              .replyWithError(NETWORK_ERROR),
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .delay(75)
-              .replyWithError(NETWORK_ERROR),
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .reply(200)
+          () => nock('http://example.com').get('/test').delay(75).replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').delay(75).replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').reply(200)
         ]);
 
         axiosRetry(client, { retries: 3, shouldResetTimeout: true });
 
-        client.get('http://example.com/test', { timeout: 100 }).then(result => {
-          expect(result.status).toBe(200);
-          done();
-        });
+        client
+          .get('http://example.com/test', { timeout: 100 })
+          .then((result) => {
+            expect(result.status).toBe(200);
+            done();
+          })
+          .catch(done.fail);
       });
 
-      it('should reject with errors without a `config` property without retrying', done => {
+      it('should reject with errors without a `config` property without retrying', (done) => {
         const client = axios.create();
 
         setupResponses(client, [
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .replyWithError(NETWORK_ERROR),
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .reply(200)
+          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').reply(200)
         ]);
 
         // Force returning a plain error without extended information from Axios
@@ -249,13 +200,13 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         axiosRetry(client, { retries: 1, retryCondition: () => true });
 
-        client.get('http://example.com/test').then(done.fail, error => {
+        client.get('http://example.com/test').then(done.fail, (error) => {
           expect(error).toBe(generatedError);
           done();
         });
       });
 
-      it('should work with a custom `agent` configuration', done => {
+      it('should work with a custom `agent` configuration', (done) => {
         const httpAgent = new http.Agent();
 
         // Simulate circular structure
@@ -265,25 +216,19 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         const client = axios.create({ agent: httpAgent });
         setupResponses(client, [
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .replyWithError(NETWORK_ERROR),
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .reply(200, 'It worked!')
+          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').reply(200, 'It worked!')
         ]);
 
         axiosRetry(client, { retries: 1, retryCondition: () => true });
 
-        client.get('http://example.com/test').then(result => {
+        client.get('http://example.com/test').then((result) => {
           expect(result.status).toBe(200);
           done();
         }, done.fail);
       });
 
-      it('should work with a custom `httpAgent` configuration', done => {
+      it('should work with a custom `httpAgent` configuration', (done) => {
         const httpAgent = new http.Agent();
 
         // Simulate circular structure
@@ -293,47 +238,35 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         const client = axios.create({ httpAgent });
         setupResponses(client, [
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .replyWithError(NETWORK_ERROR),
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .reply(200, 'It worked!')
+          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').reply(200, 'It worked!')
         ]);
 
         axiosRetry(client, { retries: 1, retryCondition: () => true });
 
-        client.get('http://example.com/test').then(result => {
+        client.get('http://example.com/test').then((result) => {
           expect(result.status).toBe(200);
           done();
         }, done.fail);
       });
 
       describe('when retry condition is returning a promise', () => {
-        it('should resolve with a successful retry as usual', done => {
+        it('should resolve with a successful retry as usual', (done) => {
           const client = axios.create();
           setupResponses(client, [
-            () =>
-              nock('http://example.com')
-                .get('/test')
-                .replyWithError(NETWORK_ERROR),
-            () =>
-              nock('http://example.com')
-                .get('/test')
-                .reply(200, 'It worked!')
+            () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+            () => nock('http://example.com').get('/test').reply(200, 'It worked!')
           ]);
 
           axiosRetry(client, {
             retries: 1,
             retryCondition: () =>
-              new Promise(res => {
+              new Promise((res) => {
                 res();
               })
           });
 
-          client.get('http://example.com/test').then(result => {
+          client.get('http://example.com/test').then((result) => {
             expect(result.status).toBe(200);
             done();
           }, done.fail);
@@ -342,39 +275,27 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
     });
 
     describe('when it does NOT satisfy the retry condition', () => {
-      it('should reject with the error', done => {
+      it('should reject with the error', (done) => {
         const client = axios.create();
         setupResponses(client, [
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .replyWithError(NETWORK_ERROR),
-          () =>
-            nock('http://example.com')
-              .get('/test')
-              .reply(200, 'It worked!')
+          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').reply(200, 'It worked!')
         ]);
 
         axiosRetry(client, { retries: 1, retryCondition: () => false });
 
-        client.get('http://example.com/test').then(done.fail, error => {
+        client.get('http://example.com/test').then(done.fail, (error) => {
           expect(error).toBe(NETWORK_ERROR);
           done();
         });
       });
 
       describe('given as promise', () => {
-        it('should reject with the error', done => {
+        it('should reject with the error', (done) => {
           const client = axios.create();
           setupResponses(client, [
-            () =>
-              nock('http://example.com')
-                .get('/test')
-                .replyWithError(NETWORK_ERROR),
-            () =>
-              nock('http://example.com')
-                .get('/test')
-                .reply(200, 'It worked!')
+            () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+            () => nock('http://example.com').get('/test').reply(200, 'It worked!')
           ]);
 
           axiosRetry(client, {
@@ -382,7 +303,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
             retryCondition: () => new Promise((_resolve, reject) => reject())
           });
 
-          client.get('http://example.com/test').then(done.fail, error => {
+          client.get('http://example.com/test').then(done.fail, (error) => {
             expect(error).toBe(NETWORK_ERROR);
             done();
           });
@@ -391,22 +312,13 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
     });
   });
 
-  it('should use request-specific configuration', done => {
+  it('should use request-specific configuration', (done) => {
     const client = axios.create();
 
     setupResponses(client, [
-      () =>
-        nock('http://example.com')
-          .get('/test')
-          .replyWithError(NETWORK_ERROR),
-      () =>
-        nock('http://example.com')
-          .get('/test')
-          .replyWithError(NETWORK_ERROR),
-      () =>
-        nock('http://example.com')
-          .get('/test')
-          .reply(200)
+      () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+      () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+      () => nock('http://example.com').get('/test').reply(200)
     ]);
 
     axiosRetry(client, { retries: 0 });
@@ -417,7 +329,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
           retries: 2
         }
       })
-      .then(result => {
+      .then((result) => {
         expect(result.status).toBe(200);
         done();
       }, done.fail);
@@ -426,26 +338,14 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
 describe('axiosRetry(axios, { retries, retryDelay })', () => {
   describe('when custom retryDelay function is supplied', () => {
-    it('should execute for each retry', done => {
+    it('should execute for each retry', (done) => {
       const client = axios.create();
 
       setupResponses(client, [
-        () =>
-          nock('http://example.com')
-            .get('/test')
-            .replyWithError(NETWORK_ERROR),
-        () =>
-          nock('http://example.com')
-            .get('/test')
-            .replyWithError(NETWORK_ERROR),
-        () =>
-          nock('http://example.com')
-            .get('/test')
-            .replyWithError(NETWORK_ERROR),
-        () =>
-          nock('http://example.com')
-            .get('/test')
-            .reply(200, 'It worked!')
+        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+        () => nock('http://example.com').get('/test').reply(200, 'It worked!')
       ]);
 
       let retryCount = 0;
@@ -471,18 +371,21 @@ describe('isNetworkError(error)', () => {
   it('should be true for network errors like connection refused', () => {
     const connectionRefusedError = new Error();
     connectionRefusedError.code = 'ECONNREFUSED';
+
     expect(isNetworkError(connectionRefusedError)).toBe(true);
   });
 
   it('should be false for timeout errors', () => {
     const timeoutError = new Error();
     timeoutError.code = 'ECONNABORTED';
+
     expect(isNetworkError(timeoutError)).toBe(false);
   });
 
   it('should be false for errors with a response', () => {
     const responseError = new Error('Response error');
     responseError.response = { status: 500 };
+
     expect(isNetworkError(responseError)).toBe(false);
   });
 
@@ -492,32 +395,36 @@ describe('isNetworkError(error)', () => {
 });
 
 describe('isSafeRequestError(error)', () => {
-  ['get', 'head', 'options'].forEach(method => {
+  ['get', 'head', 'options'].forEach((method) => {
     it(`should be true for "${method}" requests with a 5xx response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
       errorResponse.response = { status: 500 };
+
       expect(isSafeRequestError(errorResponse)).toBe(true);
     });
 
     it(`should be true for "${method}" requests without a response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
+
       expect(isSafeRequestError(errorResponse)).toBe(true);
     });
   });
 
-  ['post', 'put', 'patch', 'delete'].forEach(method => {
+  ['post', 'put', 'patch', 'delete'].forEach((method) => {
     it(`should be false for "${method}" requests with a 5xx response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
       errorResponse.response = { status: 500 };
+
       expect(isSafeRequestError(errorResponse)).toBe(false);
     });
 
     it(`should be false for "${method}" requests without a response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
+
       expect(isSafeRequestError(errorResponse)).toBe(false);
     });
   });
@@ -525,6 +432,7 @@ describe('isSafeRequestError(error)', () => {
   it('should be false for errors without a `config`', () => {
     const errorResponse = new Error('Error response');
     errorResponse.response = { status: 500 };
+
     expect(isSafeRequestError(errorResponse)).toBe(false);
   });
 
@@ -532,6 +440,7 @@ describe('isSafeRequestError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.config = { method: 'get' };
     errorResponse.response = { status: 404 };
+
     expect(isSafeRequestError(errorResponse)).toBe(false);
   });
 
@@ -539,31 +448,35 @@ describe('isSafeRequestError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.code = 'ECONNABORTED';
     errorResponse.config = { method: 'get' };
+
     expect(isSafeRequestError(errorResponse)).toBe(false);
   });
 });
 
 describe('isIdempotentRequestError(error)', () => {
-  ['get', 'head', 'options', 'put', 'delete'].forEach(method => {
+  ['get', 'head', 'options', 'put', 'delete'].forEach((method) => {
     it(`should be true for "${method}" requests with a 5xx response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
       errorResponse.response = { status: 500 };
+
       expect(isIdempotentRequestError(errorResponse)).toBe(true);
     });
 
     it(`should be true for "${method}" requests without a response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
+
       expect(isIdempotentRequestError(errorResponse)).toBe(true);
     });
   });
 
-  ['post', 'patch'].forEach(method => {
+  ['post', 'patch'].forEach((method) => {
     it(`should be false for "${method}" requests with a 5xx response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
       errorResponse.response = { status: 500 };
+
       expect(isIdempotentRequestError(errorResponse)).toBe(false);
     });
 
@@ -571,6 +484,7 @@ describe('isIdempotentRequestError(error)', () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
       errorResponse.response = { status: 500 };
+
       expect(isIdempotentRequestError(errorResponse)).toBe(false);
     });
   });
@@ -579,6 +493,7 @@ describe('isIdempotentRequestError(error)', () => {
   it('should be false for errors without a `config`', () => {
     const errorResponse = new Error('Error response');
     errorResponse.response = { status: 500 };
+
     expect(isIdempotentRequestError(errorResponse)).toBe(false);
   });
 
@@ -587,6 +502,7 @@ describe('isIdempotentRequestError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.config = { method: 'get' };
     errorResponse.response = { status: 404 };
+
     expect(isIdempotentRequestError(errorResponse)).toBe(false);
   });
 
@@ -595,6 +511,7 @@ describe('isIdempotentRequestError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.code = 'ECONNABORTED';
     errorResponse.config = { method: 'get' };
+
     expect(isIdempotentRequestError(errorResponse)).toBe(false);
   });
 });
@@ -618,12 +535,14 @@ describe('isRetryableError(error)', () => {
   it('should be false for aborted requests', () => {
     const errorResponse = new Error('Error response');
     errorResponse.code = 'ECONNABORTED';
+
     expect(isRetryableError(errorResponse)).toBe(false);
   });
 
   it('should be true for timeouts', () => {
     const errorResponse = new Error('Error response');
     errorResponse.code = 'ECONNRESET';
+
     expect(isRetryableError(errorResponse)).toBe(true);
   });
 
@@ -631,6 +550,7 @@ describe('isRetryableError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.code = 'ECONNRESET';
     errorResponse.response = { status: 500 };
+
     expect(isRetryableError(errorResponse)).toBe(true);
   });
 
@@ -638,6 +558,7 @@ describe('isRetryableError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.code = 'ECONNRESET';
     errorResponse.response = { status: 400 };
+
     expect(isRetryableError(errorResponse)).toBe(false);
   });
 });

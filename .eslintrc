@@ -9,7 +9,7 @@
         "trailingComma": "none",
         "printWidth": 100,
         "semi": true,
-        "parser": "babylon"
+        "parser": "babel"
       }
     ],
     "jasmine/no-spec-dupes": ["warn", "branch"],
@@ -34,5 +34,6 @@
     "comma-dangle": ["warn", "never"],
     "consistent-return": "off",
     "no-restricted-properties":"off"
+
   }
 }
