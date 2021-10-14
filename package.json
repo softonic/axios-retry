@@ -4,12 +4,10 @@
   "author": "Rubén Norte <ruben.norte@softonic.com>",
   "description": "Axios plugin that intercepts failed requests and retries them whenever posible.",
   "license": "Apache-2.0",
-  "main": "index.js",
   "homepage": "https://github.com/softonic/axios-retry",
   "files": [
     "es",
     "lib",
-    "index.js",
     "index.d.ts"
   ],
   "scripts": {
@@ -17,7 +15,7 @@
     "pretest": "npm run lint",
     "test": "NODE_OPTIONS=--es-module-specifier-resolution=node jasmine",
     "prebuild": "npm run test",
-    "build": "rm -rf lib && babel es -d lib --source-maps",
+    "build": "rm -rf lib && babel es -d lib/esm --source-maps && babel es -d lib/cjs --config-file ./babel.config.cjs.json --source-maps && ./fixup",
     "prerelease": "npm run build",
     "release": "npm version -m \"New version: %s\"",
     "postrelease": "npm run push && npm publish",
@@ -32,7 +30,7 @@
     "*.js": "eslint --cache --fix"
   },
   "dependencies": {
-    "is-retry-allowed": "^3.0.0"
+    "is-retry-allowed": "^2.2.0"
   },
   "peerDependencies": {
     "axios": ">=0.21.2"
@@ -40,6 +38,7 @@
   "devDependencies": {
     "@babel/cli": "^7.15.7",
     "@babel/core": "^7.15.5",
+    "@babel/plugin-transform-runtime": "^7.15.8",
     "@babel/preset-env": "^7.15.6",
     "axios": "^0.21.2",
     "eslint": "^7.32.0",
@@ -61,5 +60,16 @@
   "bugs": {
     "url": "https://github.com/softonic/axios-retry/issues"
   },
-  "typings": "./index.d.ts"
+  "typings": "./index.d.ts",
+  "engines": {
+    "node": "^12.20.0 || ^14.13.1 || >=16.0.0"
+  },
+  "main": "lib/cjs/index.js",
+  "module": "lib/esm/index.js",
+  "exports": {
+    ".": {
+      "import": "./lib/esm/index.js",
+      "require": "./index.js"
+    }
+  }
 }

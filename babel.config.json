@@ -3,7 +3,10 @@
     [
       "@babel/preset-env",
       {
-        "targets": "defaults"
+        "targets": {
+          "esmodules": true
+        },
+        "modules": false
       }
     ]
   ]
