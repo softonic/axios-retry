@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - updated all dependencies
 - made the package hybrid (ES modules and CommonJS)
-- axios >=0.21.2 is now required to work as a peer dep.
+- BREAKING: axios >=0.21.2 is now required to work as a peer dep.
+- BREAKING: NodeJS "^12.20.0 || ^14.13.1 || >=16.0.0" to work
 
 ## [3.2.0] - 2021-09-28
 
