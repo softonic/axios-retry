@@ -1,1 +1,4 @@
-module.exports = require('./lib/cjs/index').default;
+const axiosRetry = require('./lib/cjs/index').default;
+
+module.exports = axiosRetry;
+module.exports.default = axiosRetry;
