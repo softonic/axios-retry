@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.2.3] - 2021-10-19
+
+- fix: removed breaking requirements introduced in 3.2.1
+- fix: allow Typescript CommonJS default import
+
 ## [3.2.2] - 2021-10-14
 
 - fix: added missing @babel/runtime runtime dep
