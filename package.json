@@ -34,9 +34,6 @@
     "@babel/runtime": "^7.15.4",
     "is-retry-allowed": "^2.2.0"
   },
-  "peerDependencies": {
-    "axios": ">=0.21.2"
-  },
   "devDependencies": {
     "@babel/cli": "^7.15.7",
     "@babel/core": "^7.15.5",
@@ -63,9 +60,6 @@
     "url": "https://github.com/softonic/axios-retry/issues"
   },
   "typings": "./index.d.ts",
-  "engines": {
-    "node": "^12.20.0 || ^14.13.1 || >=16.0.0"
-  },
   "main": "index.js",
   "module": "lib/esm/index.js",
   "exports": {
