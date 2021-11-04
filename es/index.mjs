@@ -198,7 +198,7 @@ export default function axiosRetry(axios, defaultOptions) {
     const currentState = getCurrentState(config);
     currentState.lastRequestTime = Date.now();
     return config;
-  });
+  }, null, { synchronous: true });
 
   axios.interceptors.response.use(null, async (error) => {
     const { config } = error;
