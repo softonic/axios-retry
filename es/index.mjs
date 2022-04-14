@@ -132,8 +132,7 @@ async function shouldRetry(retries, retryCondition, currentState, error) {
   // This could be a promise
   if (typeof shouldRetryOrPromise === 'object') {
     try {
-      await shouldRetryOrPromise;
-      return true;
+      return await shouldRetryOrPromise;
     } catch (_err) {
       return false;
     }
