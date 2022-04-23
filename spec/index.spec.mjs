@@ -262,7 +262,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
             retries: 1,
             retryCondition: () =>
               new Promise((res) => {
-                res();
+                res(true);
               })
           });
 
@@ -270,6 +270,27 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
             expect(result.status).toBe(200);
             done();
           }, done.fail);
+        });
+
+        it('should reject when promise result is false', (done) => {
+          const client = axios.create();
+          setupResponses(client, [
+            () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+            () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+          ]);
+
+          axiosRetry(client, {
+            retries: 1,
+            retryCondition: () =>
+              new Promise((res) => {
+                res(false);
+              })
+          });
+
+          client.get('http://example.com/test').then(done.fail, (error) => {
+            expect(error).toBe(NETWORK_ERROR);
+            done();
+          });
         });
       });
     });
