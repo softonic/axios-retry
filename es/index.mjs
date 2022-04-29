@@ -57,7 +57,7 @@ export function isIdempotentRequestError(error) {
 
 /**
  * @param  {Error}  error
- * @return {boolean | Promise}
+ * @return {boolean}
  */
 export function isNetworkOrIdempotentRequestError(error) {
   return isNetworkError(error) || isIdempotentRequestError(error);
@@ -132,7 +132,9 @@ async function shouldRetry(retries, retryCondition, currentState, error) {
   // This could be a promise
   if (typeof shouldRetryOrPromise === 'object') {
     try {
-      return await shouldRetryOrPromise;
+      const shouldRetryPromiseResult = await shouldRetryOrPromise;
+      // keep return true unless shouldRetryPromiseResult return false for compatibility
+      return shouldRetryPromiseResult !== false;
     } catch (_err) {
       return false;
     }
