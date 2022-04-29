@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.2.5] - 2022-04-29
+
+- handle retryCondition false return value
+
 ## [3.2.4] - 2021-10-27
 
 - fix: add package.json to exports
