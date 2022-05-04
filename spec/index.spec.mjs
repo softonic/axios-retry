@@ -48,7 +48,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
       axiosRetry(client, { retries: 0 });
 
       client.get('http://example.com/test').then((result) => {
-        expect(result.status).toBe(200);
+        expect(result.status).toEqual(200);
         done();
       }, done.fail);
     });
@@ -63,7 +63,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
       ]);
 
       const retryCondition = (error) => {
-        expect(error).toBe(NETWORK_ERROR);
+        expect(error).toEqual(NETWORK_ERROR);
         done();
         return false;
       };
@@ -84,7 +84,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         axiosRetry(client, { retries: 1, retryCondition: () => true });
 
         client.get('http://example.com/test').then((result) => {
-          expect(result.status).toBe(200);
+          expect(result.status).toEqual(200);
           done();
         }, done.fail);
       });
@@ -97,14 +97,14 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
           () =>
             nock('http://example.com')
               .post('/test', (body) => {
-                expect(body.a).toBe('b');
+                expect(body.a).toEqual('b');
                 return true;
               })
               .replyWithError(NETWORK_ERROR),
           () =>
             nock('http://example.com')
               .post('/test', (body) => {
-                expect(body.a).toBe('b');
+                expect(body.a).toEqual('b');
                 return true;
               })
               .reply(200, 'It worked!')
@@ -113,7 +113,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         axiosRetry(client, { retries: 1, retryCondition: () => true });
 
         client.post('http://example.com/test', { a: 'b' }).then((result) => {
-          expect(result.status).toBe(200);
+          expect(result.status).toEqual(200);
           done();
         }, done.fail);
       });
@@ -128,7 +128,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         axiosRetry(client, { retries: 0, retryCondition: () => {} });
 
         client.get('http://example.com/test').then(done.fail, (error) => {
-          expect(error).toBe(NETWORK_ERROR);
+          expect(error).toEqual(NETWORK_ERROR);
           done();
         });
       });
@@ -144,7 +144,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         axiosRetry(client, { retries: 1, retryCondition: () => true });
 
         client.get('http://example.com/test').then(done.fail, (error) => {
-          expect(error).toBe(NETWORK_ERROR);
+          expect(error).toEqual(NETWORK_ERROR);
           done();
         });
       });
@@ -161,7 +161,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         axiosRetry(client, { retries: 3 });
 
         client.get('http://example.com/test', { timeout: 100 }).then(done.fail, (error) => {
-          expect(error.code).toBe('ECONNABORTED');
+          expect(error.code).toEqual('ECONNABORTED');
           done();
         });
       });
@@ -180,7 +180,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         client
           .get('http://example.com/test', { timeout: 100 })
           .then((result) => {
-            expect(result.status).toBe(200);
+            expect(result.status).toEqual(200);
             done();
           })
           .catch(done.fail);
@@ -201,7 +201,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         axiosRetry(client, { retries: 1, retryCondition: () => true });
 
         client.get('http://example.com/test').then(done.fail, (error) => {
-          expect(error).toBe(generatedError);
+          expect(error).toEqual(generatedError);
           done();
         });
       });
@@ -223,7 +223,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         axiosRetry(client, { retries: 1, retryCondition: () => true });
 
         client.get('http://example.com/test').then((result) => {
-          expect(result.status).toBe(200);
+          expect(result.status).toEqual(200);
           done();
         }, done.fail);
       });
@@ -245,7 +245,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         axiosRetry(client, { retries: 1, retryCondition: () => true });
 
         client.get('http://example.com/test').then((result) => {
-          expect(result.status).toBe(200);
+          expect(result.status).toEqual(200);
           done();
         }, done.fail);
       });
@@ -267,7 +267,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
           });
 
           client.get('http://example.com/test').then((result) => {
-            expect(result.status).toBe(200);
+            expect(result.status).toEqual(200);
             done();
           }, done.fail);
         });
@@ -288,7 +288,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
           });
 
           client.get('http://example.com/test').then(done.fail, (error) => {
-            expect(error).toBe(NETWORK_ERROR);
+            expect(error).toEqual(NETWORK_ERROR);
             done();
           });
         });
@@ -306,7 +306,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         axiosRetry(client, { retries: 1, retryCondition: () => false });
 
         client.get('http://example.com/test').then(done.fail, (error) => {
-          expect(error).toBe(NETWORK_ERROR);
+          expect(error).toEqual(NETWORK_ERROR);
           done();
         });
       });
@@ -325,7 +325,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
           });
 
           client.get('http://example.com/test').then(done.fail, (error) => {
-            expect(error).toBe(NETWORK_ERROR);
+            expect(error).toEqual(NETWORK_ERROR);
             done();
           });
         });
@@ -351,7 +351,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         }
       })
       .then((result) => {
-        expect(result.status).toBe(200);
+        expect(result.status).toEqual(200);
         done();
       }, done.fail);
   });
@@ -381,7 +381,7 @@ describe('axiosRetry(axios, { retries, retryDelay })', () => {
       });
 
       client.get('http://example.com/test').then(() => {
-        expect(retryCount).toBe(3);
+        expect(retryCount).toEqual(3);
         done();
       }, done.fail);
     });
@@ -393,25 +393,25 @@ describe('isNetworkError(error)', () => {
     const connectionRefusedError = new Error();
     connectionRefusedError.code = 'ECONNREFUSED';
 
-    expect(isNetworkError(connectionRefusedError)).toBe(true);
+    expect(isNetworkError(connectionRefusedError)).toEqual(true);
   });
 
   it('should be false for timeout errors', () => {
     const timeoutError = new Error();
     timeoutError.code = 'ECONNABORTED';
 
-    expect(isNetworkError(timeoutError)).toBe(false);
+    expect(isNetworkError(timeoutError)).toEqual(false);
   });
 
   it('should be false for errors with a response', () => {
     const responseError = new Error('Response error');
     responseError.response = { status: 500 };
 
-    expect(isNetworkError(responseError)).toBe(false);
+    expect(isNetworkError(responseError)).toEqual(false);
   });
 
   it('should be false for other errors', () => {
-    expect(isNetworkError(new Error())).toBe(false);
+    expect(isNetworkError(new Error())).toEqual(false);
   });
 });
 
@@ -422,14 +422,14 @@ describe('isSafeRequestError(error)', () => {
       errorResponse.config = { method };
       errorResponse.response = { status: 500 };
 
-      expect(isSafeRequestError(errorResponse)).toBe(true);
+      expect(isSafeRequestError(errorResponse)).toEqual(true);
     });
 
     it(`should be true for "${method}" requests without a response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
 
-      expect(isSafeRequestError(errorResponse)).toBe(true);
+      expect(isSafeRequestError(errorResponse)).toEqual(true);
     });
   });
 
@@ -439,14 +439,14 @@ describe('isSafeRequestError(error)', () => {
       errorResponse.config = { method };
       errorResponse.response = { status: 500 };
 
-      expect(isSafeRequestError(errorResponse)).toBe(false);
+      expect(isSafeRequestError(errorResponse)).toEqual(false);
     });
 
     it(`should be false for "${method}" requests without a response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
 
-      expect(isSafeRequestError(errorResponse)).toBe(false);
+      expect(isSafeRequestError(errorResponse)).toEqual(false);
     });
   });
 
@@ -454,7 +454,7 @@ describe('isSafeRequestError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.response = { status: 500 };
 
-    expect(isSafeRequestError(errorResponse)).toBe(false);
+    expect(isSafeRequestError(errorResponse)).toEqual(false);
   });
 
   it('should be false for non-5xx responses', () => {
@@ -462,7 +462,7 @@ describe('isSafeRequestError(error)', () => {
     errorResponse.config = { method: 'get' };
     errorResponse.response = { status: 404 };
 
-    expect(isSafeRequestError(errorResponse)).toBe(false);
+    expect(isSafeRequestError(errorResponse)).toEqual(false);
   });
 
   it('should be false for aborted requests', () => {
@@ -470,7 +470,7 @@ describe('isSafeRequestError(error)', () => {
     errorResponse.code = 'ECONNABORTED';
     errorResponse.config = { method: 'get' };
 
-    expect(isSafeRequestError(errorResponse)).toBe(false);
+    expect(isSafeRequestError(errorResponse)).toEqual(false);
   });
 });
 
@@ -481,14 +481,14 @@ describe('isIdempotentRequestError(error)', () => {
       errorResponse.config = { method };
       errorResponse.response = { status: 500 };
 
-      expect(isIdempotentRequestError(errorResponse)).toBe(true);
+      expect(isIdempotentRequestError(errorResponse)).toEqual(true);
     });
 
     it(`should be true for "${method}" requests without a response`, () => {
       const errorResponse = new Error('Error response');
       errorResponse.config = { method };
 
-      expect(isIdempotentRequestError(errorResponse)).toBe(true);
+      expect(isIdempotentRequestError(errorResponse)).toEqual(true);
     });
   });
 
@@ -498,7 +498,7 @@ describe('isIdempotentRequestError(error)', () => {
       errorResponse.config = { method };
       errorResponse.response = { status: 500 };
 
-      expect(isIdempotentRequestError(errorResponse)).toBe(false);
+      expect(isIdempotentRequestError(errorResponse)).toEqual(false);
     });
 
     it(`should be false for "${method}" requests without a response`, () => {
@@ -506,7 +506,7 @@ describe('isIdempotentRequestError(error)', () => {
       errorResponse.config = { method };
       errorResponse.response = { status: 500 };
 
-      expect(isIdempotentRequestError(errorResponse)).toBe(false);
+      expect(isIdempotentRequestError(errorResponse)).toEqual(false);
     });
   });
 
@@ -515,7 +515,7 @@ describe('isIdempotentRequestError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.response = { status: 500 };
 
-    expect(isIdempotentRequestError(errorResponse)).toBe(false);
+    expect(isIdempotentRequestError(errorResponse)).toEqual(false);
   });
 
   // eslint-disable-next-line jasmine/no-spec-dupes
@@ -524,7 +524,7 @@ describe('isIdempotentRequestError(error)', () => {
     errorResponse.config = { method: 'get' };
     errorResponse.response = { status: 404 };
 
-    expect(isIdempotentRequestError(errorResponse)).toBe(false);
+    expect(isIdempotentRequestError(errorResponse)).toEqual(false);
   });
 
   // eslint-disable-next-line jasmine/no-spec-dupes
@@ -533,7 +533,7 @@ describe('isIdempotentRequestError(error)', () => {
     errorResponse.code = 'ECONNABORTED';
     errorResponse.config = { method: 'get' };
 
-    expect(isIdempotentRequestError(errorResponse)).toBe(false);
+    expect(isIdempotentRequestError(errorResponse)).toEqual(false);
   });
 });
 
@@ -545,7 +545,7 @@ describe('exponentialDelay', () => {
 
       const time = exponentialDelay(retryNumber);
 
-      expect(time >= min && time <= max).toBe(true);
+      expect(time >= min && time <= max).toEqual(true);
     }
 
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach(assertTime);
@@ -557,14 +557,14 @@ describe('isRetryableError(error)', () => {
     const errorResponse = new Error('Error response');
     errorResponse.code = 'ECONNABORTED';
 
-    expect(isRetryableError(errorResponse)).toBe(false);
+    expect(isRetryableError(errorResponse)).toEqual(false);
   });
 
   it('should be true for timeouts', () => {
     const errorResponse = new Error('Error response');
     errorResponse.code = 'ECONNRESET';
 
-    expect(isRetryableError(errorResponse)).toBe(true);
+    expect(isRetryableError(errorResponse)).toEqual(true);
   });
 
   it('should be true for a 5xx response', () => {
@@ -572,7 +572,7 @@ describe('isRetryableError(error)', () => {
     errorResponse.code = 'ECONNRESET';
     errorResponse.response = { status: 500 };
 
-    expect(isRetryableError(errorResponse)).toBe(true);
+    expect(isRetryableError(errorResponse)).toEqual(true);
   });
 
   it('should be false for a response !== 5xx', () => {
@@ -580,6 +580,6 @@ describe('isRetryableError(error)', () => {
     errorResponse.code = 'ECONNRESET';
     errorResponse.response = { status: 400 };
 
-    expect(isRetryableError(errorResponse)).toBe(false);
+    expect(isRetryableError(errorResponse)).toEqual(false);
   });
 });
