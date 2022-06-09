@@ -193,6 +193,8 @@ async function shouldRetry(retries, retryCondition, currentState, error) {
  *        A function to determine if the error can be retried
  * @param {Function} [defaultOptions.retryDelay=noDelay]
  *        A function to determine the delay between retry requests
+ * @param {Function} [defaultOptions.onRetry=()=>{}]
+ *        A function to get notified when a retry occurs
  */
 export default function axiosRetry(axios, defaultOptions) {
   axios.interceptors.request.use((config) => {
@@ -213,7 +215,8 @@ export default function axiosRetry(axios, defaultOptions) {
       retries = 3,
       retryCondition = isNetworkOrIdempotentRequestError,
       retryDelay = noDelay,
-      shouldResetTimeout = false
+      shouldResetTimeout = false,
+      onRetry = () => {}
     } = getRequestOptions(config, defaultOptions);
 
     const currentState = getCurrentState(config);
@@ -233,6 +236,8 @@ export default function axiosRetry(axios, defaultOptions) {
       }
 
       config.transformRequest = [(data) => data];
+
+      onRetry(currentState.retryCount, error, config);
 
       return new Promise((resolve) => setTimeout(() => resolve(axios(config)), delay));
     }
