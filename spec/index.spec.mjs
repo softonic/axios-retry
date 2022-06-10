@@ -388,7 +388,6 @@ describe('axiosRetry(axios, { retries, retryDelay })', () => {
   });
 });
 
-
 describe('axiosRetry(axios, { retries, onRetry })', () => {
   afterEach(() => {
     nock.cleanAll();
@@ -396,14 +395,9 @@ describe('axiosRetry(axios, { retries, onRetry })', () => {
   });
 
   describe('when the onRetry is handled', () => {
-    it('should resolve with correct number of retries', done => {
+    it('should resolve with correct number of retries', (done) => {
       const client = axios.create();
-      setupResponses(client, [
-        () =>
-          nock('http://example.com')
-            .get('/test')
-            .reply(500, 'Failed!')
-      ]);
+      setupResponses(client, [() => nock('http://example.com').get('/test').reply(500, 'Failed!')]);
 
       let retryCalled = 0;
       let finalRetryCount = 0;
@@ -424,14 +418,10 @@ describe('axiosRetry(axios, { retries, onRetry })', () => {
         done();
       });
     });
-    it('should use onRetry set on request', done => {
+
+    it('should use onRetry set on request', (done) => {
       const client = axios.create();
-      setupResponses(client, [
-        () =>
-          nock('http://example.com')
-            .get('/test')
-            .reply(500, 'Failed!')
-      ]);
+      setupResponses(client, [() => nock('http://example.com').get('/test').reply(500, 'Failed!')]);
 
       let retryCalled = 0;
       let finalRetryCount = 0;
