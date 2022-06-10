@@ -405,9 +405,9 @@ describe('axiosRetry(axios, { retries, onRetry })', () => {
         retryCalled += 1;
         finalRetryCount = retryCount;
         // eslint-disable-next-line no-unused-expressions
-        expect(err !== undefined).toBe(true);
+        expect(err).not.toBe(undefined);
         // eslint-disable-next-line no-unused-expressions
-        expect(requestConfig !== undefined).toBe(true);
+        expect(requestConfig).not.toBe(undefined);
       };
 
       axiosRetry(client, { retries: 2, onRetry });
@@ -429,9 +429,9 @@ describe('axiosRetry(axios, { retries, onRetry })', () => {
         retryCalled += 1;
         finalRetryCount = retryCount;
         // eslint-disable-next-line no-unused-expressions
-        expect(err !== undefined).toBe(true);
+        expect(err).not.toBe(undefined);
         // eslint-disable-next-line no-unused-expressions
-        expect(requestConfig !== undefined).toBe(true);
+        expect(requestConfig).not.toBe(undefined);
       };
 
       axiosRetry(client, { retries: 2 });
