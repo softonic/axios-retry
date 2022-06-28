@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.3.0] - 2022-06-28
+
+- Added `onRetry` callback option
+
 ## [3.2.6] - 2022-06-28
 
 - Add types export to package.json
