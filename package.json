@@ -64,6 +64,7 @@
   "module": "lib/esm/index.js",
   "exports": {
     ".": {
+      "types": "./index.d.ts",
       "import": "./lib/esm/index.js",
       "require": "./index.js"
     },
