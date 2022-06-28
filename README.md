@@ -65,6 +65,7 @@ client
 | retryCondition | `Function` | `isNetworkOrIdempotentRequestError` | A callback to further control if a request should be retried.  By default, it retries if it is a network error or a 5xx error on an idempotent request (GET, HEAD, OPTIONS, PUT or DELETE). |
 | shouldResetTimeout | `Boolean` | false | Defines if the timeout should be reset between retries |
 | retryDelay | `Function` | `function noDelay() { return 0; }` | A callback to further control the delay in milliseconds between retried requests. By default there is no delay between retries. Another option is exponentialDelay ([Exponential Backoff](https://developers.google.com/analytics/devguides/reporting/core/v3/errors#backoff)). The function is passed `retryCount` and `error`. |
+| onRetry | `Function` | `function onRetry(retryCount, error, requestConfig) { return; }` | A callback to notify when a retry is about to occur. Useful for tracing. By default nothing will occur. The function is passed `retryCount`, `error`, and `requestConfig`. |
 
 ## Testing
 

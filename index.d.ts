@@ -50,6 +50,12 @@ declare namespace IAxiosRetry {
      * @type {Function}
      */
     retryDelay?: (retryCount: number, error: axios.AxiosError) => number
+	/**
+     * A callback to get notified when a retry occurs, the number of times it has occurre, and the error
+     *
+     * @type {Function}
+     */
+    onRetry?: (retryCount: number, error: axios.AxiosError, requestConfig: axios.AxiosRequestConfig) => void
   }
 }
 
