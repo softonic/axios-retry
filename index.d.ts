@@ -55,7 +55,7 @@ declare namespace IAxiosRetry {
      *
      * @type {Function}
      */
-    onRetry?: (retryCount: number, error: axios.AxiosError, requestConfig: axios.AxiosRequestConfig) => void
+    onRetry?: (retryCount: number, error: axios.AxiosError, requestConfig: axios.AxiosRequestConfig) => void | Promise<void>
   }
 }
 
