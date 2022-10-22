@@ -75,6 +75,16 @@ Clone the repository and execute:
 npm test
 ```
 
+### Debugging
+
+install the following package in VS Code
+
+```
+DmitriyMuraviov.vscode-jasmine-test-runner
+```
+
+The VS Code configuration should work automatically, else press Ctrl+Shift+P and type `Developer: Reload Window`, which will reload all the installed extensions
+
 ## Contribute
 
 1. Fork it: `git clone https://github.com/softonic/axios-retry.git`

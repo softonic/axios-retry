@@ -1,10 +1,10 @@
 {
   "name": "@coin-miles/axios-retry",
-  "version": "3.3.4",
-  "author": "Rubén Norte <ruben.norte@softonic.com>",
+  "version": "3.3.5",
+  "author": "Mathieu Auclair <mathieu@coinmiles.io>, Rubén Norte <ruben.norte@softonic.com>",
   "description": "Axios plugin that intercepts failed requests and retries them whenever posible.",
   "license": "Apache-2.0",
-  "homepage": "https://github.com/softonic/axios-retry",
+  "homepage": "https://github.com/coinmiles-technology/axios-retry",
   "files": [
     "es",
     "lib",
@@ -54,10 +54,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/softonic/axios-retry.git"
+    "url": "git+https://github.com/coinmiles-technology/axios-retry.git"
   },
   "bugs": {
-    "url": "https://github.com/softonic/axios-retry/issues"
+    "url": "https://github.com/coinmiles-technology/axios-retry/issues"
   },
   "typings": "./index.d.ts",
   "main": "index.js",
