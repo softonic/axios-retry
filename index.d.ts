@@ -54,6 +54,7 @@ declare namespace IAxiosRetry {
      * A callback to get notified when a retry occurs, the number of times it has occurre, and the error
      *
      * @type {Function}
+     * @remark By default HTTP/401 are not retried, if you need to update a token bearer, make sure to mention `retryCondition: () => true`
      */
     onRetry?: (retryCount: number, error: axios.AxiosError, requestConfig: axios.AxiosRequestConfig) => void | Promise<void>
   }
