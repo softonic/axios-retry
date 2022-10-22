@@ -449,6 +449,46 @@ describe('axiosRetry(axios, { retries, onRetry })', () => {
           done();
         });
     });
+
+    it('Should handle onRetry with asynchronous code', async (done) => {
+      const client = axios.create();
+      setupResponses(client, [
+        () => nock('http://example.com').get('/test').reply(500, 'Failed!'),
+        () => nock('http://example.com').get('/test').reply(500, 'Failed!'),
+        () => nock('http://example.com').get('/test').reply(200)
+      ]);
+
+      let hasCallbackBeenExecuted = false;
+
+      const expectedAuthHeader = 'access-token';
+      const onRetry = async (retryCount, err, requestConfig) => {
+        hasCallbackBeenExecuted = true;
+
+        if (retryCount === 1) {
+          expect(err.response.status).toBe(500);
+          requestConfig.headers.authorization = 'test';
+          return;
+        }
+
+        if (retryCount === 2) {
+          expect(err.response.status).toBe(500);
+          expect(requestConfig.headers.authorization).toBe('test');
+          requestConfig.headers.authorization = expectedAuthHeader;
+          return;
+        }
+
+        throw new Error(`Unexpected retry occured: ${retryCount}...`);
+      };
+
+      axiosRetry(client, { onRetry });
+
+      const response = await client.get('http://example.com/test');
+
+      expect(hasCallbackBeenExecuted).toBe(true);
+      expect(response.request.headers.authorization).toBe(expectedAuthHeader);
+
+      done();
+    });
   });
 });
 

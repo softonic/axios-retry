@@ -237,12 +237,7 @@ export default function axiosRetry(axios, defaultOptions) {
 
       config.transformRequest = [(data) => data];
 
-      // Check if promise or regular void
-      if (typeof onRetry === 'object') {
-        await onRetry(currentState.retryCount, error, config);
-      } else {
-        onRetry(currentState.retryCount, error, config);
-      }
+      await onRetry(currentState.retryCount, error, config);
 
       return new Promise((resolve) => setTimeout(() => resolve(axios(config)), delay));
     }
