@@ -7,7 +7,8 @@ import axiosRetry, {
   isIdempotentRequestError,
   exponentialDelay,
   isRetryableError
-} from '../es/index';
+  // eslint-disable-next-line import/extensions
+} from '../es/index.mjs';
 
 const NETWORK_ERROR = new Error('Some connection error');
 NETWORK_ERROR.code = 'ECONNRESET';
