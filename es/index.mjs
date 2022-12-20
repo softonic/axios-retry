@@ -1,6 +1,6 @@
 import isRetryAllowed from 'is-retry-allowed';
 
-const namespace = 'axios-retry';
+export const namespace = 'axios-retry';
 
 /**
  * @param  {Error}  error
@@ -231,8 +231,11 @@ export default function axiosRetry(axios, defaultOptions) {
 
       if (!shouldResetTimeout && config.timeout && currentState.lastRequestTime) {
         const lastRequestDuration = Date.now() - currentState.lastRequestTime;
-        // Minimum 1ms timeout (passing 0 or less to XHR means no timeout)
-        config.timeout = Math.max(config.timeout - lastRequestDuration - delay, 1);
+        const timeout = config.timeout - lastRequestDuration - delay;
+        if (timeout <= 0) {
+          return Promise.reject(error);
+        }
+        config.timeout = timeout;
       }
 
       config.transformRequest = [(data) => data];
