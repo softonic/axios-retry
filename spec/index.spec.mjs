@@ -63,7 +63,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
       ]);
 
       const retryCondition = (error) => {
-        expect(error).toBe(NETWORK_ERROR);
+        expect(error).toEqual(NETWORK_ERROR);
         done();
         return false;
       };
@@ -128,7 +128,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         axiosRetry(client, { retries: 0, retryCondition: () => {} });
 
         client.get('http://example.com/test').then(done.fail, (error) => {
-          expect(error).toBe(NETWORK_ERROR);
+          expect(error).toEqual(NETWORK_ERROR);
           done();
         });
       });
@@ -144,7 +144,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         axiosRetry(client, { retries: 1, retryCondition: () => true });
 
         client.get('http://example.com/test').then(done.fail, (error) => {
-          expect(error).toBe(NETWORK_ERROR);
+          expect(error).toEqual(NETWORK_ERROR);
           done();
         });
       });
@@ -201,7 +201,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         axiosRetry(client, { retries: 1, retryCondition: () => true });
 
         client.get('http://example.com/test').then(done.fail, (error) => {
-          expect(error).toBe(generatedError);
+          expect(error).toEqual(generatedError);
           done();
         });
       });
@@ -288,7 +288,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
           });
 
           client.get('http://example.com/test').then(done.fail, (error) => {
-            expect(error).toBe(NETWORK_ERROR);
+            expect(error).toEqual(NETWORK_ERROR);
             done();
           });
         });
@@ -306,7 +306,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         axiosRetry(client, { retries: 1, retryCondition: () => false });
 
         client.get('http://example.com/test').then(done.fail, (error) => {
-          expect(error).toBe(NETWORK_ERROR);
+          expect(error).toEqual(NETWORK_ERROR);
           done();
         });
       });
@@ -325,7 +325,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
           });
 
           client.get('http://example.com/test').then(done.fail, (error) => {
-            expect(error).toBe(NETWORK_ERROR);
+            expect(error).toEqual(NETWORK_ERROR);
             done();
           });
         });
