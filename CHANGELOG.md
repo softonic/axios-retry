@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.4.0] - 2023-01-20
+
+- Updated axios dep to 1.2.3
+- Update package-lock to version 2
+- Prevent the whole request lifecycle from being longer than timeout
+
 ## [3.3.1] - 2022-06-29
 
 - Security updates
