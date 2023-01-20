@@ -6,7 +6,8 @@ import axiosRetry, {
   isSafeRequestError,
   isIdempotentRequestError,
   exponentialDelay,
-  isRetryableError
+  isRetryableError,
+  namespace
 } from '../es/index';
 
 const NETWORK_ERROR = new Error('Some connection error');
@@ -162,6 +163,34 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         client.get('http://example.com/test', { timeout: 100 }).then(done.fail, (error) => {
           expect(error.code).toBe('ECONNABORTED');
+          done();
+        });
+      });
+
+      it('should not make a retry attempt if the whole request lifecycle takes more than `timeout`', (done) => {
+        const client = axios.create();
+
+        setupResponses(client, [
+          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR), // delay >= 200 ms
+          () => nock('http://example.com').get('/test').reply(200) // delay >= 400 ms
+        ]);
+
+        const timeout = 500;
+        const retries = 2;
+
+        axiosRetry(client, {
+          retries,
+          retryDelay: exponentialDelay,
+          shouldResetTimeout: false
+        });
+
+        const startDate = new Date();
+
+        client.get('http://example.com/test', { timeout }).then(done.fail, (error) => {
+          expect(new Date() - startDate).toBeLessThan(timeout);
+          expect(error.config[namespace].retryCount).toBe(retries);
+          expect(error.code).toBe(NETWORK_ERROR.code);
           done();
         });
       });
