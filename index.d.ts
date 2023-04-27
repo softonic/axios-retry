@@ -38,8 +38,8 @@ declare namespace IAxiosRetry {
      */
     shouldResetTimeout?: boolean,
     /**
-     * A callback to further control if a request should be retried. By default, it retries if the result did not have a response.
-     * default: error => !error.response
+     * A callback to further control if a request should be retried.
+     * default: it retries if it is a network error or a 5xx error on an idempotent request (GET, HEAD, OPTIONS, PUT or DELETE).
      *
      * @type {Function}
      */
