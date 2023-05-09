@@ -642,6 +642,19 @@ describe('exponentialDelay', () => {
 
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach(assertTime);
   });
+
+  it('should change delay time when specifying delay factor', () => {
+    function assertTime(retryNumber) {
+      const min = Math.pow(2, retryNumber) * 1000;
+      const max = Math.pow(2, retryNumber * 1000) * 0.2;
+
+      const time = exponentialDelay(retryNumber, 1000);
+
+      expect(time >= min && time <= max).toBe(true);
+    }
+
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach(assertTime);
+  });
 });
 
 describe('isRetryableError(error)', () => {
