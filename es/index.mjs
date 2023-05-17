@@ -226,7 +226,7 @@ export default function axiosRetry(axios, defaultOptions) {
 
     if (await shouldRetry(retries, retryCondition, currentState, error)) {
       currentState.retryCount += 1;
-      const delay = retryDelay(currentState.retryCount);
+      const delay = retryDelay(currentState.retryCount, error);
 
       // Axios fails merging this configuration to the default configuration because it has an issue
       // with circular structures: https://github.com/mzabriskie/axios/issues/370
