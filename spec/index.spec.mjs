@@ -648,7 +648,7 @@ describe('exponentialDelay', () => {
       const min = Math.pow(2, retryNumber) * 1000;
       const max = Math.pow(2, retryNumber * 1000) * 0.2;
 
-      const time = exponentialDelay(retryNumber, 1000);
+      const time = exponentialDelay(retryNumber, null, 1000);
 
       expect(time >= min && time <= max).toBe(true);
     }
