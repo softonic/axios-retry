@@ -71,11 +71,15 @@ function noDelay() {
 }
 
 /**
+ * Set delayFactor 1000 for an exponential delay to occur on the order
+ * of seconds
  * @param  {number} [retryNumber=0]
+ * @param  {Error}  error - unused; for existing API of retryDelay callback
+ * @param  {number} [delayFactor=100] milliseconds
  * @return {number} - delay in milliseconds
  */
-export function exponentialDelay(retryNumber = 0) {
-  const delay = Math.pow(2, retryNumber) * 100;
+export function exponentialDelay(retryNumber = 0, error, delayFactor = 100) {
+  const delay = Math.pow(2, retryNumber) * delayFactor;
   const randomSum = delay * 0.2 * Math.random(); // 0-20% of the delay
   return delay + randomSum;
 }
