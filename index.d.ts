@@ -11,7 +11,7 @@ interface IAxiosRetry {
   isSafeRequestError(error: Error): boolean;
   isIdempotentRequestError(error: Error): boolean;
   isNetworkOrIdempotentRequestError(error: Error): boolean;
-  exponentialDelay(retryNumber: number): number;
+  exponentialDelay(retryNumber?: number, error?: Error, delayFactor?: number): number;
 }
 
 export function isNetworkError(error: Error): boolean;
@@ -19,7 +19,7 @@ export function isRetryableError(error: Error): boolean;
 export function isSafeRequestError(error: Error): boolean;
 export function isIdempotentRequestError(error: Error): boolean;
 export function isNetworkOrIdempotentRequestError(error: Error): boolean;
-export function exponentialDelay(retryNumber: number): number;
+export function exponentialDelay(retryNumber?: number, error?: Error, delayFactor?: number): number;
 
 declare namespace IAxiosRetry {
   export interface IAxiosRetryConfig {
@@ -50,7 +50,7 @@ declare namespace IAxiosRetry {
      * @type {Function}
      */
     retryDelay?: (retryCount: number, error: axios.AxiosError) => number
-	/**
+    /**
      * A callback to get notified when a retry occurs, the number of times it has occurre, and the error
      *
      * @type {Function}
