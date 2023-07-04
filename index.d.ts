@@ -1,9 +1,9 @@
 import * as axios from 'axios';
 
-interface IAxiosRetry {
+interface AxiosRetry {
   (
     axios: axios.AxiosStatic | axios.AxiosInstance,
-    axiosRetryConfig?: IAxiosRetry.IAxiosRetryConfig
+    axiosRetryConfig?: IAxiosRetry.AxiosRetryConfig
   ): void;
 
   isNetworkError(error: Error): boolean;
@@ -22,7 +22,7 @@ export function isNetworkOrIdempotentRequestError(error: Error): boolean;
 export function exponentialDelay(retryNumber?: number, error?: Error, delayFactor?: number): number;
 
 declare namespace IAxiosRetry {
-  interface IAxiosRetryConfig {
+  interface AxiosRetryConfig {
     /**
      * The number of times to retry before failing
      * default: 3
@@ -53,9 +53,9 @@ declare namespace IAxiosRetry {
   }
 }
 
-declare const axiosRetry: IAxiosRetry;
+declare const axiosRetry: AxiosRetry;
 
-export type IAxiosRetryConfig = IAxiosRetry.IAxiosRetryConfig;
+export type IAxiosRetryConfig = IAxiosRetry.AxiosRetryConfig;
 
 export default axiosRetry;
 
