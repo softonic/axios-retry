@@ -14,7 +14,8 @@
   "scripts": {
     "lint": "eslint es/**/*.mjs spec/**/*.spec.mjs",
     "pretest": "npm run lint",
-    "test": "NODE_OPTIONS=--es-module-specifier-resolution=node jasmine && npm run test:dtslint",
+    "test": "NODE_OPTIONS=--es-module-specifier-resolution=node jasmine && npm run test:tsc:cjs && npm run test:dtslint",
+    "test:tsc:cjs": "cd spec/typings/cjs && npm run test",
     "test:dtslint": "dtslint --localTs node_modules/typescript/lib",
     "prebuild": "npm run test",
     "build": "rm -rf lib && babel es -d lib/esm --source-maps && babel es -d lib/cjs --config-file ./babel.config.cjs.json --source-maps && ./fixup",
