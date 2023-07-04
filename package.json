@@ -14,7 +14,8 @@
   "scripts": {
     "lint": "eslint es/**/*.mjs spec/**/*.spec.mjs",
     "pretest": "npm run lint",
-    "test": "NODE_OPTIONS=--es-module-specifier-resolution=node jasmine",
+    "test": "NODE_OPTIONS=--es-module-specifier-resolution=node jasmine && npm run test:dtslint",
+    "test:dtslint": "dtslint --localTs node_modules/typescript/lib",
     "prebuild": "npm run test",
     "build": "rm -rf lib && babel es -d lib/esm --source-maps && babel es -d lib/cjs --config-file ./babel.config.cjs.json --source-maps && ./fixup",
     "prerelease": "npm run build",
@@ -40,6 +41,7 @@
     "@babel/plugin-transform-runtime": "^7.15.8",
     "@babel/preset-env": "^7.15.6",
     "axios": "^1.2.3",
+    "dtslint": "^4.2.1",
     "eslint": "^7.32.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-config-prettier": "^8.3.0",
@@ -50,7 +52,8 @@
     "jasmine": "^3.9.0",
     "lint-staged": "^11.2.0",
     "nock": "^13.1.3",
-    "prettier": "^2.4.1"
+    "prettier": "^2.4.1",
+    "typescript": "^4.8.4"
   },
   "repository": {
     "type": "git",
