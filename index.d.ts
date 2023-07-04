@@ -22,7 +22,7 @@ export function isNetworkOrIdempotentRequestError(error: Error): boolean;
 export function exponentialDelay(retryNumber?: number, error?: Error, delayFactor?: number): number;
 
 declare namespace IAxiosRetry {
-  export interface IAxiosRetryConfig {
+  interface IAxiosRetryConfig {
     /**
      * The number of times to retry before failing
      * default: 3
@@ -60,7 +60,7 @@ export type IAxiosRetryConfig = IAxiosRetry.IAxiosRetryConfig;
 export default axiosRetry;
 
 declare module 'axios' {
-  export interface AxiosRequestConfig {
+  interface AxiosRequestConfig {
     'axios-retry'?: IAxiosRetryConfig;
   }
 }
