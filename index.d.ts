@@ -1,4 +1,4 @@
-import * as axios from 'axios'
+import * as axios from 'axios';
 
 interface IAxiosRetry {
   (
@@ -26,36 +26,30 @@ declare namespace IAxiosRetry {
     /**
      * The number of times to retry before failing
      * default: 3
-     *
-     * @type {number}
      */
-    retries?: number,
+    retries?: number;
     /**
      * Defines if the timeout should be reset between retries
      * default: false
-     *
-     * @type {boolean}
      */
-    shouldResetTimeout?: boolean,
+    shouldResetTimeout?: boolean;
     /**
      * A callback to further control if a request should be retried.
      * default: it retries if it is a network error or a 5xx error on an idempotent request (GET, HEAD, OPTIONS, PUT or DELETE).
-     *
-     * @type {Function}
      */
-    retryCondition?: (error: axios.AxiosError) => boolean | Promise<boolean>,
+    retryCondition?: (error: axios.AxiosError) => boolean | Promise<boolean>;
     /**
      * A callback to further control the delay between retry requests. By default there is no delay.
-     *
-     * @type {Function}
      */
-    retryDelay?: (retryCount: number, error: axios.AxiosError) => number
+    retryDelay?: (retryCount: number, error: axios.AxiosError) => number;
     /**
      * A callback to get notified when a retry occurs, the number of times it has occurre, and the error
-     *
-     * @type {Function}
      */
-    onRetry?: (retryCount: number, error: axios.AxiosError, requestConfig: axios.AxiosRequestConfig) => void
+    onRetry?: (
+      retryCount: number,
+      error: axios.AxiosError,
+      requestConfig: axios.AxiosRequestConfig
+    ) => void;
   }
 }
 
