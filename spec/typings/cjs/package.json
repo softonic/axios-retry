@@ -8,8 +8,6 @@
     "test": "npm i --no-save --no-package-lock && tsc -v && npm run test:types",
     "test:types": "tsc && node index.js"
   },
-  "keywords": [],
-  "author": "",
   "license": "MIT",
   "dependencies": {
     "axios": "1.2.3",

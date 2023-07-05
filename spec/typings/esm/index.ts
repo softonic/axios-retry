@@ -1,8 +1,10 @@
 import axiosRetry, { exponentialDelay, AxiosRetryConfig } from 'axios-retry';
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 
-const instance = axios.create();
+const instance: AxiosInstance = axios.create();
+
 const config: AxiosRetryConfig = { retryDelay: axiosRetry.exponentialDelay };
+const config2: axiosRetry.AxiosRetryConfig = { retryDelay: exponentialDelay };
 
 axiosRetry(axios, config);
-axiosRetry(instance, { retryDelay: exponentialDelay });
+axiosRetry(instance, config2);
