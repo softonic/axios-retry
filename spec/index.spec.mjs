@@ -688,3 +688,25 @@ describe('isRetryableError(error)', () => {
     expect(isRetryableError(errorResponse)).toBe(false);
   });
 });
+
+describe('axiosRetry interceptors', () => {
+  it('should be able to successfully eject interceptors added by axiosRetry', () => {
+    const client = axios.create();
+
+    expect(client.interceptors.request.handlers.length).toBe(0);
+    expect(client.interceptors.response.handlers.length).toBe(0);
+
+    const { requestInterceptorId, responseInterceptorId } = axiosRetry(client);
+
+    expect(client.interceptors.request.handlers.length).toBe(1);
+    expect(client.interceptors.response.handlers.length).toBe(1);
+    expect(client.interceptors.request.handlers[0]).not.toBe(null);
+    expect(client.interceptors.response.handlers[0]).not.toBe(null);
+
+    client.interceptors.request.eject(requestInterceptorId);
+    client.interceptors.response.eject(responseInterceptorId);
+
+    expect(client.interceptors.request.handlers[0]).toBe(null);
+    expect(client.interceptors.response.handlers[0]).toBe(null);
+  });
+});
