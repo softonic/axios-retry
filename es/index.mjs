@@ -199,15 +199,17 @@ async function shouldRetry(retries, retryCondition, currentState, error) {
  *        A function to determine the delay between retry requests
  * @param {Function} [defaultOptions.onRetry=()=>{}]
  *        A function to get notified when a retry occurs
+ * @return {{ requestInterceptorId: number, responseInterceptorId: number }}
+ *        The ids of the interceptors added to the request and to the response (so they can be ejected at a later time)
  */
 export default function axiosRetry(axios, defaultOptions) {
-  axios.interceptors.request.use((config) => {
+  const requestInterceptorId = axios.interceptors.request.use((config) => {
     const currentState = getCurrentState(config);
     currentState.lastRequestTime = Date.now();
     return config;
   });
 
-  axios.interceptors.response.use(null, async (error) => {
+  const responseInterceptorId = axios.interceptors.response.use(null, async (error) => {
     const { config } = error;
 
     // If we have no information to retry the request
@@ -251,6 +253,8 @@ export default function axiosRetry(axios, defaultOptions) {
 
     return Promise.reject(error);
   });
+
+  return { requestInterceptorId, responseInterceptorId };
 }
 
 // Compatibility with CommonJS
