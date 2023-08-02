@@ -6,7 +6,7 @@ declare const IAxiosRetry: IAxiosRetry.AxiosRetry;
 
 declare namespace IAxiosRetry {
   interface AxiosRetry {
-    (axios: axios.AxiosStatic | axios.AxiosInstance, axiosRetryConfig?: AxiosRetryConfig): void;
+    (axios: axios.AxiosStatic | axios.AxiosInstance, axiosRetryConfig?: AxiosRetryConfig): AxiosRetryReturn;
 
     isNetworkError(error: Error): boolean;
     isRetryableError(error: Error): boolean;
@@ -44,6 +44,17 @@ declare namespace IAxiosRetry {
       error: axios.AxiosError,
       requestConfig: axios.AxiosRequestConfig
     ) => void;
+  }
+
+  interface AxiosRetryReturn {
+    /**
+     * The interceptorId for the request interceptor
+     */
+    requestInterceptorId: number;
+    /**
+     * The interceptorId for the response interceptor
+     */
+    responseInterceptorId: number;
   }
 }
 
