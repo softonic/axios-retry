@@ -417,6 +417,36 @@ describe('axiosRetry(axios, { retries, retryDelay })', () => {
   });
 });
 
+describe('axiosRetry(axios, { onMaxRetryTimesExceeded })', () => {
+  const customError = new Error('CustomErrorAfterMaxRetryTimesExceeded');
+
+  afterEach(() => {
+    nock.cleanAll();
+    nock.enableNetConnect();
+  });
+
+  describe('when the onMaxRetryTimesExceeded is handled', () => {
+    it('should reject with the custom error', (done) => {
+      const client = axios.create();
+      setupResponses(client, [() => nock('http://example.com').get('/test').reply(502, 'Failed!')]);
+
+      const onMaxRetryTimesExceeded = () => {
+        throw customError;
+      };
+
+      axiosRetry(client, {
+        retries: 2,
+        onMaxRetryTimesExceeded
+      });
+
+      client.get('http://example.com/test').then(done.fail, (error) => {
+        expect(error).toEqual(customError);
+        done();
+      });
+    });
+  });
+});
+
 describe('axiosRetry(axios, { retries, onRetry })', () => {
   afterEach(() => {
     nock.cleanAll();

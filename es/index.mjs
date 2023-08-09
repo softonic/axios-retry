@@ -146,6 +146,12 @@ async function shouldRetry(retries, retryCondition, currentState, error) {
   return shouldRetryOrPromise;
 }
 
+const handleMaxRetryTimesExceeded = (defaultOptions, currentState, retries, error) => {
+  if (defaultOptions.onMaxRetryTimesExceeded && currentState.retryCount >= retries) {
+    defaultOptions.onMaxRetryTimesExceeded(error, currentState.retryCount);
+  }
+};
+
 /**
  * Adds response interceptors to an axios instance to retry requests failed due to network issues
  *
@@ -250,6 +256,8 @@ export default function axiosRetry(axios, defaultOptions) {
 
       return new Promise((resolve) => setTimeout(() => resolve(axios(config)), delay));
     }
+
+    handleMaxRetryTimesExceeded(defaultOptions, currentState, retries, error);
 
     return Promise.reject(error);
   });

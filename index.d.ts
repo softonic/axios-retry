@@ -56,6 +56,13 @@ declare namespace IAxiosRetry {
      * @type {Function}
      */
     onRetry?: (retryCount: number, error: axios.AxiosError, requestConfig: axios.AxiosRequestConfig) => void
+    /**
+     * After all the retries are failed, this callback will be called with the last error
+     * before throwing the error.
+     * 
+     * * @type {Function}
+     */
+    onMaxRetryTimesExceeded?: (error: axios.AxiosError, retryCount: number) => void
   }
 }
 
