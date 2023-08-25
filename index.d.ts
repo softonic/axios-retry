@@ -4,7 +4,7 @@ interface IAxiosRetry {
   (
     axios: axios.AxiosStatic | axios.AxiosInstance,
     axiosRetryConfig?: IAxiosRetry.IAxiosRetryConfig
-  ): void;
+  ): IAxiosRetry.IAxiosRetryReturn;
 
   isNetworkError(error: Error): boolean;
   isRetryableError(error: Error): boolean;
@@ -57,11 +57,27 @@ declare namespace IAxiosRetry {
      */
     onRetry?: (retryCount: number, error: axios.AxiosError, requestConfig: axios.AxiosRequestConfig) => void
   }
+
+  export interface IAxiosRetryReturn {
+    /**
+     * The interceptorId for the request interceptor
+     *
+     * @type {number}
+     */
+    requestInterceptorId: number;
+    /**
+     * The interceptorId for the response interceptor
+     *
+     * @type {number}
+     */
+    responseInterceptorId: number;
+  }
 }
 
 declare const axiosRetry: IAxiosRetry;
 
 export type IAxiosRetryConfig = IAxiosRetry.IAxiosRetryConfig;
+export type IAxiosRetryReturn = IAxiosRetry.IAxiosRetryReturn;
 
 export default axiosRetry;
 
