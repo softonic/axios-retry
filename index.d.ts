@@ -1,27 +1,24 @@
-import * as axios from 'axios'
+import * as axios from 'axios';
 
-interface IAxiosRetry {
-  (
-    axios: axios.AxiosStatic | axios.AxiosInstance,
-    axiosRetryConfig?: IAxiosRetry.IAxiosRetryConfig
-  ): IAxiosRetry.IAxiosRetryReturn;
-
-  isNetworkError(error: Error): boolean;
-  isRetryableError(error: Error): boolean;
-  isSafeRequestError(error: Error): boolean;
-  isIdempotentRequestError(error: Error): boolean;
-  isNetworkOrIdempotentRequestError(error: Error): boolean;
-  exponentialDelay(retryNumber?: number, error?: Error, delayFactor?: number): number;
-}
-
-export function isNetworkError(error: Error): boolean;
-export function isRetryableError(error: Error): boolean;
-export function isSafeRequestError(error: Error): boolean;
-export function isIdempotentRequestError(error: Error): boolean;
-export function isNetworkOrIdempotentRequestError(error: Error): boolean;
-export function exponentialDelay(retryNumber?: number, error?: Error, delayFactor?: number): number;
+export = IAxiosRetry;
+export as namespace axiosRetry;
+declare const IAxiosRetry: IAxiosRetry.AxiosRetry;
 
 declare namespace IAxiosRetry {
+  export interface AxiosRetry {
+    (
+      axios: axios.AxiosStatic | axios.AxiosInstance,
+      axiosRetryConfig?: IAxiosRetryConfig
+    ): IAxiosRetryReturn;
+
+    isNetworkError(error: Error): boolean;
+    isRetryableError(error: Error): boolean;
+    isSafeRequestError(error: Error): boolean;
+    isIdempotentRequestError(error: Error): boolean;
+    isNetworkOrIdempotentRequestError(error: Error): boolean;
+    exponentialDelay(retryNumber?: number, error?: Error, delayFactor?: number): number;
+  }
+
   export interface IAxiosRetryConfig {
     /**
      * The number of times to retry before failing
@@ -29,33 +26,37 @@ declare namespace IAxiosRetry {
      *
      * @type {number}
      */
-    retries?: number,
+    retries?: number;
     /**
      * Defines if the timeout should be reset between retries
      * default: false
      *
      * @type {boolean}
      */
-    shouldResetTimeout?: boolean,
+    shouldResetTimeout?: boolean;
     /**
      * A callback to further control if a request should be retried.
      * default: it retries if it is a network error or a 5xx error on an idempotent request (GET, HEAD, OPTIONS, PUT or DELETE).
      *
      * @type {Function}
      */
-    retryCondition?: (error: axios.AxiosError) => boolean | Promise<boolean>,
+    retryCondition?: (error: axios.AxiosError) => boolean | Promise<boolean>;
     /**
      * A callback to further control the delay between retry requests. By default there is no delay.
      *
      * @type {Function}
      */
-    retryDelay?: (retryCount: number, error: axios.AxiosError) => number
+    retryDelay?: (retryCount: number, error: axios.AxiosError) => number;
     /**
      * A callback to get notified when a retry occurs, the number of times it has occurre, and the error
      *
      * @type {Function}
      */
-    onRetry?: (retryCount: number, error: axios.AxiosError, requestConfig: axios.AxiosRequestConfig) => void
+    onRetry?: (
+      retryCount: number,
+      error: axios.AxiosError,
+      requestConfig: axios.AxiosRequestConfig
+    ) => void;
   }
 
   export interface IAxiosRetryReturn {
@@ -74,15 +75,8 @@ declare namespace IAxiosRetry {
   }
 }
 
-declare const axiosRetry: IAxiosRetry;
-
-export type IAxiosRetryConfig = IAxiosRetry.IAxiosRetryConfig;
-export type IAxiosRetryReturn = IAxiosRetry.IAxiosRetryReturn;
-
-export default axiosRetry;
-
 declare module 'axios' {
   export interface AxiosRequestConfig {
-    'axios-retry'?: IAxiosRetryConfig;
+    'axios-retry'?: IAxiosRetry.IAxiosRetryConfig;
   }
 }
