@@ -7,17 +7,14 @@ export const namespace = 'axios-retry';
  * @return {boolean}
  */
 export function isNetworkError(error) {
-	const CODE_EXCLUDE_LIST = [
-		'ERR_CANCELED',
-		'ECONNABORTED'
-	];
+  const CODE_EXCLUDE_LIST = ['ERR_CANCELED', 'ECONNABORTED'];
 
-	return (
-		!error.response &&
-		Boolean(error.code) && // Prevents retrying cancelled requests
-		!CODE_EXCLUDE_LIST.includes(error.code) && // Prevents retrying timed out & cancelled requests
-		isRetryAllowed(error) // Prevents retrying unsafe errors
-	);
+  return (
+    !error.response &&
+    Boolean(error.code) && // Prevents retrying cancelled requests
+    !CODE_EXCLUDE_LIST.includes(error.code) && // Prevents retrying timed out & cancelled requests
+    isRetryAllowed(error) // Prevents retrying unsafe errors
+  );
 }
 
 const SAFE_HTTP_METHODS = ['get', 'head', 'options'];
