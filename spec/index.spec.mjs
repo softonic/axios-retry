@@ -478,6 +478,102 @@ describe('axiosRetry(axios, { retries, onRetry })', () => {
         });
     });
   });
+
+  describe('when the onRetry is returning a promise', () => {
+    it('should resolve with correct number of retries', (done) => {
+      const client = axios.create();
+      setupResponses(client, [() => nock('http://example.com').get('/test').reply(500, 'Failed!')]);
+
+      let retryCalled = 0;
+      let finalRetryCount = 0;
+      const onRetry = (retryCount, err, requestConfig) =>
+        new Promise((resolve) => {
+          setTimeout(() => {
+            retryCalled += 1;
+            finalRetryCount = retryCount;
+            // eslint-disable-next-line no-unused-expressions
+            expect(err).not.toBe(undefined);
+            // eslint-disable-next-line no-unused-expressions
+            expect(requestConfig).not.toBe(undefined);
+
+            resolve();
+          }, 100);
+        });
+
+      axiosRetry(client, { retries: 2, onRetry });
+
+      client.get('http://example.com/test').catch(() => {
+        expect(retryCalled).toBe(2);
+        expect(finalRetryCount).toBe(2);
+        done();
+      });
+    });
+
+    it('should reject with the error', (done) => {
+      const client = axios.create();
+      setupResponses(client, [() => nock('http://example.com').get('/test').reply(500, 'Failed!')]);
+
+      let retryCalled = 0;
+      let finalRetryCount = 0;
+      const onRetry = (retryCount, err, requestConfig) =>
+        new Promise((resolve, reject) => {
+          setTimeout(() => {
+            retryCalled += 1;
+            finalRetryCount = retryCount;
+            // eslint-disable-next-line no-unused-expressions
+            expect(err).not.toBe(undefined);
+            // eslint-disable-next-line no-unused-expressions
+            expect(requestConfig).not.toBe(undefined);
+
+            reject(new Error('onRetry error'));
+          }, 100);
+        });
+
+      axiosRetry(client, { retries: 2, onRetry });
+
+      client.get('http://example.com/test').then(done.fail, (error) => {
+        expect(error.message).toBe('onRetry error');
+        expect(retryCalled).toBe(1);
+        expect(finalRetryCount).toBe(1);
+        done();
+      });
+    });
+
+    it('should use onRetry set on request', (done) => {
+      const client = axios.create();
+      setupResponses(client, [() => nock('http://example.com').get('/test').reply(500, 'Failed!')]);
+
+      let retryCalled = 0;
+      let finalRetryCount = 0;
+      const onRetry = (retryCount, err, requestConfig) =>
+        new Promise((resolve) => {
+          setTimeout(() => {
+            retryCalled += 1;
+            finalRetryCount = retryCount;
+            // eslint-disable-next-line no-unused-expressions
+            expect(err).not.toBe(undefined);
+            // eslint-disable-next-line no-unused-expressions
+            expect(requestConfig).not.toBe(undefined);
+
+            resolve();
+          }, 100);
+        });
+
+      axiosRetry(client, { retries: 2 });
+
+      client
+        .get('http://example.com/test', {
+          'axios-retry': {
+            onRetry
+          }
+        })
+        .catch(() => {
+          expect(retryCalled).toBe(2);
+          expect(finalRetryCount).toBe(2);
+          done();
+        });
+    });
+  });
 });
 
 describe('isNetworkError(error)', () => {
