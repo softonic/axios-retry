@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.8.1] - 2023-10-26
+
+- onRetry support for async function
+
 ## [3.8.0] - 2023-09-21
 
 - Don't retry cancelled requests by default
