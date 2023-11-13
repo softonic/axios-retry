@@ -59,6 +59,21 @@ declare namespace IAxiosRetry {
     ) => void;
   }
 
+  export interface IAxiosRetryConfigExtended extends IAxiosRetryConfig {
+    /**
+     * The number of times the request was retried
+     *
+     * @type {number}
+     */
+    retryCount?: number;
+    /**
+     * The last time the request was retried (timestamp in milliseconds)
+     *
+     * @type {number}
+     */
+    lastRequestTime?: number;
+  }
+
   export interface IAxiosRetryReturn {
     /**
      * The interceptorId for the request interceptor
@@ -77,6 +92,6 @@ declare namespace IAxiosRetry {
 
 declare module 'axios' {
   export interface AxiosRequestConfig {
-    'axios-retry'?: IAxiosRetry.IAxiosRetryConfig;
+    'axios-retry'?: IAxiosRetry.IAxiosRetryConfigExtended;
   }
 }

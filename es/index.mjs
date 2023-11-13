@@ -86,26 +86,36 @@ export function exponentialDelay(retryNumber = 0, error, delayFactor = 100) {
   return delay + randomSum;
 }
 
-/**
- * Initializes and returns the retry state for the given request/config
- * @param  {AxiosRequestConfig} config
- * @return {Object}
- */
-function getCurrentState(config) {
-  const currentState = config[namespace] || {};
-  currentState.retryCount = currentState.retryCount || 0;
-  config[namespace] = currentState;
-  return currentState;
-}
+/** @type {IAxiosRetryConfig} */
+export const DEFAULT_OPTIONS = {
+  retries: 3,
+  retryCondition: isNetworkOrIdempotentRequestError,
+  retryDelay: noDelay,
+  shouldResetTimeout: false,
+  onRetry: () => {}
+};
 
 /**
  * Returns the axios-retry options for the current request
  * @param  {AxiosRequestConfig} config
- * @param  {AxiosRetryConfig} defaultOptions
- * @return {AxiosRetryConfig}
+ * @param  {IAxiosRetryConfig} defaultOptions
+ * @return {IAxiosRetryConfigExtended}
  */
 function getRequestOptions(config, defaultOptions) {
-  return { ...defaultOptions, ...config[namespace] };
+  return { ...DEFAULT_OPTIONS, ...defaultOptions, ...config[namespace] };
+}
+
+/**
+ * Initializes and returns the retry state for the given request/config
+ * @param  {AxiosRequestConfig} config
+ * @param  {IAxiosRetryConfig} defaultOptions
+ * @return {IAxiosRetryConfigExtended}
+ */
+function getCurrentState(config, defaultOptions) {
+  const currentState = getRequestOptions(config, defaultOptions);
+  currentState.retryCount = currentState.retryCount || 0;
+  config[namespace] = currentState;
+  return currentState;
 }
 
 /**
@@ -125,14 +135,13 @@ function fixConfig(axios, config) {
 }
 
 /**
- * Checks retryCondition if request can be retried. Handles it's retruning value or Promise.
- * @param  {number} retries
- * @param  {Function} retryCondition
- * @param  {Object} currentState
+ * Checks retryCondition if request can be retried. Handles it's returning value or Promise.
+ * @param  {IAxiosRetryConfigExtended} currentState
  * @param  {Error} error
- * @return {boolean}
+ * @return {Promise<boolean>}
  */
-async function shouldRetry(retries, retryCondition, currentState, error) {
+async function shouldRetry(currentState, error) {
+  const { retries, retryCondition } = currentState;
   const shouldRetryOrPromise = currentState.retryCount < retries && retryCondition(error);
 
   // This could be a promise
@@ -206,7 +215,7 @@ async function shouldRetry(retries, retryCondition, currentState, error) {
  */
 export default function axiosRetry(axios, defaultOptions) {
   const requestInterceptorId = axios.interceptors.request.use((config) => {
-    const currentState = getCurrentState(config);
+    const currentState = getCurrentState(config, defaultOptions);
     currentState.lastRequestTime = Date.now();
     return config;
   });
@@ -219,18 +228,11 @@ export default function axiosRetry(axios, defaultOptions) {
       return Promise.reject(error);
     }
 
-    const {
-      retries = 3,
-      retryCondition = isNetworkOrIdempotentRequestError,
-      retryDelay = noDelay,
-      shouldResetTimeout = false,
-      onRetry = () => {}
-    } = getRequestOptions(config, defaultOptions);
+    const currentState = getCurrentState(config, defaultOptions);
 
-    const currentState = getCurrentState(config);
-
-    if (await shouldRetry(retries, retryCondition, currentState, error)) {
+    if (await shouldRetry(currentState, error)) {
       currentState.retryCount += 1;
+      const { retryDelay, shouldResetTimeout, onRetry } = currentState;
       const delay = retryDelay(currentState.retryCount, error);
 
       // Axios fails merging this configuration to the default configuration because it has an issue
