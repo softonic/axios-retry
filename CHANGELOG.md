@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.9.0] - 2023-11-14
+
+- Export of type definitions, depending on whether it is ES Module or CommonJS
+
 ## [3.8.2] - 2023-11-14
 
 - Expose axios-retry options in error object
