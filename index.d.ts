@@ -1,6 +1,6 @@
 import * as axios from 'axios';
 
-export = IAxiosRetry;
+export default IAxiosRetry;
 export as namespace axiosRetry;
 declare const IAxiosRetry: IAxiosRetry.AxiosRetry;
 
