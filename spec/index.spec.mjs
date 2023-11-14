@@ -86,6 +86,8 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         client.get('http://example.com/test').then((result) => {
           expect(result.status).toBe(200);
+          expect(result.config[namespace].retries).toBe(1);
+          expect(result.config[namespace].retryCount).toBe(1);
           done();
         }, done.fail);
       });
