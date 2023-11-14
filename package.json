@@ -1,6 +1,7 @@
 {
   "name": "axios-retry",
   "version": "3.8.1",
+  "type": "module",
   "author": "Rubén Norte <ruben.norte@softonic.com>",
   "description": "Axios plugin that intercepts failed requests and retries them whenever posible.",
   "license": "Apache-2.0",
@@ -8,8 +9,7 @@
   "files": [
     "es",
     "lib",
-    "index.js",
-    "index.d.ts"
+    "index.cjs"
   ],
   "scripts": {
     "lint": "eslint es/**/*.mjs spec/**/*.spec.mjs",
@@ -59,14 +59,20 @@
   "bugs": {
     "url": "https://github.com/softonic/axios-retry/issues"
   },
-  "types": "./index.d.ts",
-  "main": "index.js",
+  "types": "lib/esm/index.d.ts",
+  "main": "index.cjs",
   "module": "lib/esm/index.js",
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "import": "./lib/esm/index.js",
-      "require": "./index.js"
+      "import": {
+        "types": "./lib/esm/index.d.ts",
+        "default": "./lib/esm/index.js"
+      },
+      "require": {
+        "types": "./lib/cjs/index.d.ts",
+        "default": "./index.cjs"
+      },
+      "default": "./index.cjs"
     },
     "./package.json": "./package.json"
   }

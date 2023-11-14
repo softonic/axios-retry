@@ -9,3 +9,6 @@ cat >lib/esm/package.json <<!EOF
     "type": "module"
 }
 !EOF
+
+cp index.d.ts lib/cjs/
+cp index.d.ts lib/esm/
