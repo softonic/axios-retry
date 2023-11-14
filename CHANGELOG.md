@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.8.2] - 2023-11-14
+
+- Expose axios-retry options in error object
+
 ## [3.8.1] - 2023-10-26
 
 - onRetry support for async function
