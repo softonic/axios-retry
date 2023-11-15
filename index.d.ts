@@ -4,6 +4,17 @@ export default IAxiosRetry;
 export as namespace axiosRetry;
 declare const IAxiosRetry: IAxiosRetry.AxiosRetry;
 
+export type IAxiosRetryConfig = IAxiosRetry.IAxiosRetryConfig;
+export type IAxiosRetryConfigExtended = IAxiosRetry.IAxiosRetryConfigExtended;
+export type IAxiosRetryReturn = IAxiosRetry.IAxiosRetryReturn;
+
+export function isNetworkError(error: Error): boolean;
+export function isRetryableError(error: Error): boolean;
+export function isSafeRequestError(error: Error): boolean;
+export function isIdempotentRequestError(error: Error): boolean;
+export function isNetworkOrIdempotentRequestError(error: Error): boolean;
+export function exponentialDelay(retryNumber?: number, error?: Error, delayFactor?: number): number;
+
 declare namespace IAxiosRetry {
   export interface AxiosRetry {
     (
