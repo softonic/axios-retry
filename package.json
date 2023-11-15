@@ -8,12 +8,14 @@
   "files": [
     "es",
     "lib",
-    "index.cjs"
+    "index.cjs",
+    "index.d.ts"
   ],
   "scripts": {
     "lint": "eslint es/**/*.mjs spec/**/*.spec.mjs",
     "pretest": "npm run lint",
-    "test": "NODE_OPTIONS=--es-module-specifier-resolution=node jasmine && tsd --files ./index.test-d.ts",
+    "test": "NODE_OPTIONS=--es-module-specifier-resolution=node jasmine",
+    "test:tsd": "tsd",
     "prebuild": "npm run test",
     "build": "rm -rf lib && babel es -d lib/esm --source-maps && babel es -d lib/cjs --config-file ./babel.config.cjs.json --source-maps && ./fixup",
     "prerelease": "npm run build",
@@ -59,7 +61,7 @@
   "bugs": {
     "url": "https://github.com/softonic/axios-retry/issues"
   },
-  "types": "lib/esm/index.d.ts",
+  "types": "index.d.ts",
   "main": "index.js",
   "module": "lib/esm/index.js",
   "exports": {
