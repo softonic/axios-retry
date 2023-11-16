@@ -8,7 +8,8 @@
   "files": [
     "es",
     "lib",
-    "index.cjs"
+    "index.js",
+    "index.d.ts"
   ],
   "scripts": {
     "lint": "eslint es/**/*.mjs spec/**/*.spec.mjs",
@@ -58,20 +59,14 @@
   "bugs": {
     "url": "https://github.com/softonic/axios-retry/issues"
   },
-  "types": "lib/esm/index.d.ts",
+  "types": "./index.d.ts",
   "main": "index.js",
   "module": "lib/esm/index.js",
   "exports": {
     ".": {
-      "import": {
-        "types": "./lib/esm/index.d.ts",
-        "default": "./lib/esm/index.js"
-      },
-      "require": {
-        "types": "./lib/cjs/index.d.ts",
-        "default": "./index.js"
-      },
-      "default": "./index.js"
+      "types": "./index.d.ts",
+      "import": "./lib/esm/index.js",
+      "require": "./index.js"
     },
     "./package.json": "./package.json"
   }
