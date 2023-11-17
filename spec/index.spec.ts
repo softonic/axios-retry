@@ -8,9 +8,9 @@ import axiosRetry, {
   exponentialDelay,
   isRetryableError,
   namespace
-} from '../es/index';
+} from '../src/index';
 
-const NETWORK_ERROR = new Error('Some connection error');
+const NETWORK_ERROR = new Error('Some connection error') as any;
 NETWORK_ERROR.code = 'ECONNRESET';
 
 function setupResponses(client, responses) {
@@ -86,7 +86,9 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         client.get('http://example.com/test').then((result) => {
           expect(result.status).toBe(200);
+          // @ts-ignore
           expect(result.config[namespace].retries).toBe(1);
+          // @ts-ignore
           expect(result.config[namespace].retryCount).toBe(1);
           done();
         }, done.fail);
@@ -94,6 +96,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
       it('should not run transformRequest twice', (done) => {
         const client = axios.create({
+          // @ts-ignore
           transformRequest: [JSON.stringify]
         });
         setupResponses(client, [
@@ -128,8 +131,10 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
           () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR)
         ]);
 
+        // @ts-ignore
         axiosRetry(client, { retries: 0, retryCondition: () => {} });
 
+        // @ts-ignore
         client.get('http://example.com/test').then(done.fail, (error) => {
           expect(error).toEqual(NETWORK_ERROR);
           done();
@@ -146,6 +151,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         axiosRetry(client, { retries: 1, retryCondition: () => true });
 
+        // @ts-ignore
         client.get('http://example.com/test').then(done.fail, (error) => {
           expect(error).toEqual(NETWORK_ERROR);
           done();
@@ -163,6 +169,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         axiosRetry(client, { retries: 3 });
 
+        // @ts-ignore
         client.get('http://example.com/test', { timeout: 100 }).then(done.fail, (error) => {
           expect(error.code).toBe('ECONNABORTED');
           done();
@@ -183,13 +190,16 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         axiosRetry(client, {
           retries,
+          // @ts-ignore
           retryDelay: exponentialDelay,
           shouldResetTimeout: false
         });
 
         const startDate = new Date();
 
+        // @ts-ignore
         client.get('http://example.com/test', { timeout }).then(done.fail, (error) => {
+          // @ts-ignore
           expect(new Date() - startDate).toBeLessThan(timeout);
           expect(error.config[namespace].retryCount).toBe(retries);
           expect(error.code).toBe(NETWORK_ERROR.code);
@@ -231,6 +241,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         axiosRetry(client, { retries: 1, retryCondition: () => true });
 
+        // @ts-ignore
         client.get('http://example.com/test').then(done.fail, (error) => {
           expect(error).toEqual(generatedError);
           done();
@@ -242,9 +253,12 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         // Simulate circular structure
         const fakeSocket = { foo: 'foo' };
+        // @ts-ignore
         httpAgent.sockets['multisearch.api.softonic.com:80:'] = [fakeSocket];
+        // @ts-ignore
         fakeSocket.socket = fakeSocket;
 
+        // @ts-ignore
         const client = axios.create({ agent: httpAgent });
         setupResponses(client, [
           () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
@@ -264,7 +278,9 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         // Simulate circular structure
         const fakeSocket = { foo: 'foo' };
+        // @ts-ignore
         httpAgent.sockets['multisearch.api.softonic.com:80:'] = [fakeSocket];
+        // @ts-ignore
         fakeSocket.socket = fakeSocket;
 
         const client = axios.create({ httpAgent });
@@ -318,6 +334,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
               })
           });
 
+          // @ts-ignore
           client.get('http://example.com/test').then(done.fail, (error) => {
             expect(error).toEqual(NETWORK_ERROR);
             done();
@@ -336,6 +353,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
 
         axiosRetry(client, { retries: 1, retryCondition: () => false });
 
+        // @ts-ignore
         client.get('http://example.com/test').then(done.fail, (error) => {
           expect(error).toEqual(NETWORK_ERROR);
           done();
@@ -355,6 +373,7 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
             retryCondition: () => new Promise((_resolve, reject) => reject())
           });
 
+          // @ts-ignore
           client.get('http://example.com/test').then(done.fail, (error) => {
             expect(error).toEqual(NETWORK_ERROR);
             done();
@@ -498,6 +517,7 @@ describe('axiosRetry(axios, { retries, onRetry })', () => {
             // eslint-disable-next-line no-unused-expressions
             expect(requestConfig).not.toBe(undefined);
 
+            // @ts-ignore
             resolve();
           }, 100);
         });
@@ -533,6 +553,7 @@ describe('axiosRetry(axios, { retries, onRetry })', () => {
 
       axiosRetry(client, { retries: 2, onRetry });
 
+      // @ts-ignore
       client.get('http://example.com/test').then(done.fail, (error) => {
         expect(error.message).toBe('onRetry error');
         expect(retryCalled).toBe(1);
@@ -557,6 +578,7 @@ describe('axiosRetry(axios, { retries, onRetry })', () => {
             // eslint-disable-next-line no-unused-expressions
             expect(requestConfig).not.toBe(undefined);
 
+            // @ts-ignore
             resolve();
           }, 100);
         });
@@ -581,6 +603,7 @@ describe('axiosRetry(axios, { retries, onRetry })', () => {
 describe('isNetworkError(error)', () => {
   it('should be true for network errors like connection refused', () => {
     const connectionRefusedError = new Error();
+    // @ts-ignore
     connectionRefusedError.code = 'ECONNREFUSED';
 
     expect(isNetworkError(connectionRefusedError)).toBe(true);
@@ -588,6 +611,7 @@ describe('isNetworkError(error)', () => {
 
   it('should be false for timeout errors', () => {
     const timeoutError = new Error();
+    // @ts-ignore
     timeoutError.code = 'ECONNABORTED';
 
     expect(isNetworkError(timeoutError)).toBe(false);
@@ -595,6 +619,7 @@ describe('isNetworkError(error)', () => {
 
   it('should be false for errors with a response', () => {
     const responseError = new Error('Response error');
+    // @ts-ignore
     responseError.response = { status: 500 };
 
     expect(isNetworkError(responseError)).toBe(false);
@@ -609,7 +634,9 @@ describe('isSafeRequestError(error)', () => {
   ['get', 'head', 'options'].forEach((method) => {
     it(`should be true for "${method}" requests with a 5xx response`, () => {
       const errorResponse = new Error('Error response');
+      // @ts-ignore
       errorResponse.config = { method };
+      // @ts-ignore
       errorResponse.response = { status: 500 };
 
       expect(isSafeRequestError(errorResponse)).toBe(true);
@@ -617,6 +644,7 @@ describe('isSafeRequestError(error)', () => {
 
     it(`should be true for "${method}" requests without a response`, () => {
       const errorResponse = new Error('Error response');
+      // @ts-ignore
       errorResponse.config = { method };
 
       expect(isSafeRequestError(errorResponse)).toBe(true);
@@ -626,7 +654,9 @@ describe('isSafeRequestError(error)', () => {
   ['post', 'put', 'patch', 'delete'].forEach((method) => {
     it(`should be false for "${method}" requests with a 5xx response`, () => {
       const errorResponse = new Error('Error response');
+      // @ts-ignore
       errorResponse.config = { method };
+      // @ts-ignore
       errorResponse.response = { status: 500 };
 
       expect(isSafeRequestError(errorResponse)).toBe(false);
@@ -634,6 +664,7 @@ describe('isSafeRequestError(error)', () => {
 
     it(`should be false for "${method}" requests without a response`, () => {
       const errorResponse = new Error('Error response');
+      // @ts-ignore
       errorResponse.config = { method };
 
       expect(isSafeRequestError(errorResponse)).toBe(false);
@@ -642,6 +673,7 @@ describe('isSafeRequestError(error)', () => {
 
   it('should be false for errors without a `config`', () => {
     const errorResponse = new Error('Error response');
+    // @ts-ignore
     errorResponse.response = { status: 500 };
 
     expect(isSafeRequestError(errorResponse)).toBe(false);
@@ -649,7 +681,9 @@ describe('isSafeRequestError(error)', () => {
 
   it('should be false for non-5xx responses', () => {
     const errorResponse = new Error('Error response');
+    // @ts-ignore
     errorResponse.config = { method: 'get' };
+    // @ts-ignore
     errorResponse.response = { status: 404 };
 
     expect(isSafeRequestError(errorResponse)).toBe(false);
@@ -657,7 +691,9 @@ describe('isSafeRequestError(error)', () => {
 
   it('should be false for aborted requests', () => {
     const errorResponse = new Error('Error response');
+    // @ts-ignore
     errorResponse.code = 'ECONNABORTED';
+    // @ts-ignore
     errorResponse.config = { method: 'get' };
 
     expect(isSafeRequestError(errorResponse)).toBe(false);
@@ -668,7 +704,9 @@ describe('isIdempotentRequestError(error)', () => {
   ['get', 'head', 'options', 'put', 'delete'].forEach((method) => {
     it(`should be true for "${method}" requests with a 5xx response`, () => {
       const errorResponse = new Error('Error response');
+      // @ts-ignore
       errorResponse.config = { method };
+      // @ts-ignore
       errorResponse.response = { status: 500 };
 
       expect(isIdempotentRequestError(errorResponse)).toBe(true);
@@ -676,6 +714,7 @@ describe('isIdempotentRequestError(error)', () => {
 
     it(`should be true for "${method}" requests without a response`, () => {
       const errorResponse = new Error('Error response');
+      // @ts-ignore
       errorResponse.config = { method };
 
       expect(isIdempotentRequestError(errorResponse)).toBe(true);
@@ -685,7 +724,9 @@ describe('isIdempotentRequestError(error)', () => {
   ['post', 'patch'].forEach((method) => {
     it(`should be false for "${method}" requests with a 5xx response`, () => {
       const errorResponse = new Error('Error response');
+      // @ts-ignore
       errorResponse.config = { method };
+      // @ts-ignore
       errorResponse.response = { status: 500 };
 
       expect(isIdempotentRequestError(errorResponse)).toBe(false);
@@ -693,7 +734,9 @@ describe('isIdempotentRequestError(error)', () => {
 
     it(`should be false for "${method}" requests without a response`, () => {
       const errorResponse = new Error('Error response');
+      // @ts-ignore
       errorResponse.config = { method };
+      // @ts-ignore
       errorResponse.response = { status: 500 };
 
       expect(isIdempotentRequestError(errorResponse)).toBe(false);
@@ -703,6 +746,7 @@ describe('isIdempotentRequestError(error)', () => {
   // eslint-disable-next-line jasmine/no-spec-dupes
   it('should be false for errors without a `config`', () => {
     const errorResponse = new Error('Error response');
+    // @ts-ignore
     errorResponse.response = { status: 500 };
 
     expect(isIdempotentRequestError(errorResponse)).toBe(false);
@@ -711,7 +755,9 @@ describe('isIdempotentRequestError(error)', () => {
   // eslint-disable-next-line jasmine/no-spec-dupes
   it('should be false for non-5xx responses', () => {
     const errorResponse = new Error('Error response');
+    // @ts-ignore
     errorResponse.config = { method: 'get' };
+    // @ts-ignore
     errorResponse.response = { status: 404 };
 
     expect(isIdempotentRequestError(errorResponse)).toBe(false);
@@ -720,7 +766,9 @@ describe('isIdempotentRequestError(error)', () => {
   // eslint-disable-next-line jasmine/no-spec-dupes
   it('should be false for aborted requests', () => {
     const errorResponse = new Error('Error response');
+    // @ts-ignore
     errorResponse.code = 'ECONNABORTED';
+    // @ts-ignore
     errorResponse.config = { method: 'get' };
 
     expect(isIdempotentRequestError(errorResponse)).toBe(false);
@@ -746,6 +794,7 @@ describe('exponentialDelay', () => {
       const min = Math.pow(2, retryNumber) * 1000;
       const max = Math.pow(2, retryNumber * 1000) * 0.2;
 
+      // @ts-ignore
       const time = exponentialDelay(retryNumber, null, 1000);
 
       expect(time >= min && time <= max).toBe(true);
@@ -758,6 +807,7 @@ describe('exponentialDelay', () => {
 describe('isRetryableError(error)', () => {
   it('should be false for aborted requests', () => {
     const errorResponse = new Error('Error response');
+    // @ts-ignore
     errorResponse.code = 'ECONNABORTED';
 
     expect(isRetryableError(errorResponse)).toBe(false);
@@ -765,6 +815,7 @@ describe('isRetryableError(error)', () => {
 
   it('should be true for timeouts', () => {
     const errorResponse = new Error('Error response');
+    // @ts-ignore
     errorResponse.code = 'ECONNRESET';
 
     expect(isRetryableError(errorResponse)).toBe(true);
@@ -772,7 +823,9 @@ describe('isRetryableError(error)', () => {
 
   it('should be true for a 5xx response', () => {
     const errorResponse = new Error('Error response');
+    // @ts-ignore
     errorResponse.code = 'ECONNRESET';
+    // @ts-ignore
     errorResponse.response = { status: 500 };
 
     expect(isRetryableError(errorResponse)).toBe(true);
@@ -780,7 +833,9 @@ describe('isRetryableError(error)', () => {
 
   it('should be false for a response !== 5xx', () => {
     const errorResponse = new Error('Error response');
+    // @ts-ignore
     errorResponse.code = 'ECONNRESET';
+    // @ts-ignore
     errorResponse.response = { status: 400 };
 
     expect(isRetryableError(errorResponse)).toBe(false);
@@ -791,20 +846,28 @@ describe('axiosRetry interceptors', () => {
   it('should be able to successfully eject interceptors added by axiosRetry', () => {
     const client = axios.create();
 
+    // @ts-ignore
     expect(client.interceptors.request.handlers.length).toBe(0);
+    // @ts-ignore
     expect(client.interceptors.response.handlers.length).toBe(0);
 
     const { requestInterceptorId, responseInterceptorId } = axiosRetry(client);
 
+    // @ts-ignore
     expect(client.interceptors.request.handlers.length).toBe(1);
+    // @ts-ignore
     expect(client.interceptors.response.handlers.length).toBe(1);
+    // @ts-ignore
     expect(client.interceptors.request.handlers[0]).not.toBe(null);
+    // @ts-ignore
     expect(client.interceptors.response.handlers[0]).not.toBe(null);
 
     client.interceptors.request.eject(requestInterceptorId);
     client.interceptors.response.eject(responseInterceptorId);
 
+    // @ts-ignore
     expect(client.interceptors.request.handlers[0]).toBe(null);
+    // @ts-ignore
     expect(client.interceptors.response.handlers[0]).toBe(null);
   });
 });

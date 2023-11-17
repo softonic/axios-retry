@@ -1,4 +1,97 @@
+import * as axios from 'axios';
 import isRetryAllowed from 'is-retry-allowed';
+
+export namespace IAxiosRetry {
+  export interface IAxiosRetryConfig {
+    /**
+     * The number of times to retry before failing
+     * default: 3
+     *
+     * @type {number}
+     */
+    retries?: number;
+    /**
+     * Defines if the timeout should be reset between retries
+     * default: false
+     *
+     * @type {boolean}
+     */
+    shouldResetTimeout?: boolean;
+    /**
+     * A callback to further control if a request should be retried.
+     * default: it retries if it is a network error or a 5xx error on an idempotent request (GET, HEAD, OPTIONS, PUT or DELETE).
+     *
+     * @type {Function}
+     */
+    retryCondition?: (error: axios.AxiosError) => boolean | Promise<boolean>;
+    /**
+     * A callback to further control the delay between retry requests. By default there is no delay.
+     *
+     * @type {Function}
+     */
+    retryDelay?: (retryCount: number, error: axios.AxiosError) => number;
+    /**
+     * A callback to get notified when a retry occurs, the number of times it has occurred, and the error
+     *
+     * @type {Function}
+     */
+    onRetry?: (
+      retryCount: number,
+      error: axios.AxiosError,
+      requestConfig: axios.AxiosRequestConfig
+    ) => void;
+  }
+
+  export interface IAxiosRetryConfigExtended extends IAxiosRetryConfig {
+    /**
+     * The number of times the request was retried
+     *
+     * @type {number}
+     */
+    retryCount?: number;
+    /**
+     * The last time the request was retried (timestamp in milliseconds)
+     *
+     * @type {number}
+     */
+    lastRequestTime?: number;
+  }
+
+  export interface IAxiosRetryReturn {
+    /**
+     * The interceptorId for the request interceptor
+     *
+     * @type {number}
+     */
+    requestInterceptorId: number;
+    /**
+     * The interceptorId for the response interceptor
+     *
+     * @type {number}
+     */
+    responseInterceptorId: number;
+  }
+
+  export interface AxiosRetry {
+    (
+      axiosInstance: axios.AxiosStatic | axios.AxiosInstance,
+      axiosRetryConfig?: IAxiosRetryConfig
+    ): IAxiosRetryReturn;
+
+    isNetworkError(error: Error): boolean;
+    isRetryableError(error: Error): boolean;
+    isSafeRequestError(error: Error): boolean;
+    isIdempotentRequestError(error: Error): boolean;
+    isNetworkOrIdempotentRequestError(error: Error): boolean;
+    exponentialDelay(retryNumber?: number, error?: Error, delayFactor?: number): number;
+  }
+}
+
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    'axios-retry'?: IAxiosRetry.IAxiosRetryConfigExtended;
+  }
+}
 
 export const namespace = 'axios-retry';
 
@@ -76,12 +169,13 @@ function noDelay() {
  * Set delayFactor 1000 for an exponential delay to occur on the order
  * of seconds
  * @param  {number} [retryNumber=0]
- * @param  {Error}  error - unused; for existing API of retryDelay callback
+ * @param  {Error}  _error - unused; for existing API of retryDelay callback
  * @param  {number} [delayFactor=100] milliseconds
  * @return {number} - delay in milliseconds
  */
-export function exponentialDelay(retryNumber = 0, error, delayFactor = 100) {
-  const delay = Math.pow(2, retryNumber) * delayFactor;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function exponentialDelay(retryNumber = 0, _error = undefined, delayFactor = 100) {
+  const delay = 2 ** retryNumber * delayFactor;
   const randomSum = delay * 0.2 * Math.random(); // 0-20% of the delay
   return delay + randomSum;
 }
@@ -119,17 +213,17 @@ function getCurrentState(config, defaultOptions) {
 }
 
 /**
- * @param  {Axios} axios
+ * @param  {Axios} axiosInstance
  * @param  {AxiosRequestConfig} config
  */
-function fixConfig(axios, config) {
-  if (axios.defaults.agent === config.agent) {
+function fixConfig(axiosInstance, config) {
+  if (axiosInstance.defaults.agent === config.agent) {
     delete config.agent;
   }
-  if (axios.defaults.httpAgent === config.httpAgent) {
+  if (axiosInstance.defaults.httpAgent === config.httpAgent) {
     delete config.httpAgent;
   }
-  if (axios.defaults.httpsAgent === config.httpsAgent) {
+  if (axiosInstance.defaults.httpsAgent === config.httpsAgent) {
     delete config.httpsAgent;
   }
 }
@@ -199,7 +293,7 @@ async function shouldRetry(currentState, error) {
  *     error !== undefined
  *   });
  *
- * @param {Axios} axios An axios instance (the axios object or one created from axios.create)
+ * @param {Axios} axiosInstance An axios instance (the axios object or one created from axios.create)
  * @param {Object} [defaultOptions]
  * @param {number} [defaultOptions.retries=3] Number of retries
  * @param {boolean} [defaultOptions.shouldResetTimeout=false]
@@ -213,14 +307,14 @@ async function shouldRetry(currentState, error) {
  * @return {{ requestInterceptorId: number, responseInterceptorId: number }}
  *        The ids of the interceptors added to the request and to the response (so they can be ejected at a later time)
  */
-export default function axiosRetry(axios, defaultOptions) {
-  const requestInterceptorId = axios.interceptors.request.use((config) => {
+const axiosRetry: IAxiosRetry.AxiosRetry = (axiosInstance, defaultOptions) => {
+  const requestInterceptorId = axiosInstance.interceptors.request.use((config) => {
     const currentState = getCurrentState(config, defaultOptions);
     currentState.lastRequestTime = Date.now();
     return config;
   });
 
-  const responseInterceptorId = axios.interceptors.response.use(null, async (error) => {
+  const responseInterceptorId = axiosInstance.interceptors.response.use(null, async (error) => {
     const { config } = error;
 
     // If we have no information to retry the request
@@ -237,7 +331,7 @@ export default function axiosRetry(axios, defaultOptions) {
 
       // Axios fails merging this configuration to the default configuration because it has an issue
       // with circular structures: https://github.com/mzabriskie/axios/issues/370
-      fixConfig(axios, config);
+      fixConfig(axiosInstance, config);
 
       if (!shouldResetTimeout && config.timeout && currentState.lastRequestTime) {
         const lastRequestDuration = Date.now() - currentState.lastRequestTime;
@@ -252,14 +346,16 @@ export default function axiosRetry(axios, defaultOptions) {
 
       await onRetry(currentState.retryCount, error, config);
 
-      return new Promise((resolve) => setTimeout(() => resolve(axios(config)), delay));
+      return new Promise((resolve) => {
+        setTimeout(() => resolve(axiosInstance(config)), delay);
+      });
     }
 
     return Promise.reject(error);
   });
 
   return { requestInterceptorId, responseInterceptorId };
-}
+};
 
 // Compatibility with CommonJS
 axiosRetry.isNetworkError = isNetworkError;
@@ -268,3 +364,4 @@ axiosRetry.isIdempotentRequestError = isIdempotentRequestError;
 axiosRetry.isNetworkOrIdempotentRequestError = isNetworkOrIdempotentRequestError;
 axiosRetry.exponentialDelay = exponentialDelay;
 axiosRetry.isRetryableError = isRetryableError;
+export default axiosRetry;
