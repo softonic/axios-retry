@@ -33,7 +33,7 @@
     "is-retry-allowed": "^2.2.0"
   },
   "peerDependencies": {
-    "axios": "^0 || ^1"
+    "axios": "0.x || 1.x"
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",

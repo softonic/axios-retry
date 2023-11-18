@@ -92,14 +92,14 @@ export function isNetworkError(error) {
 const SAFE_HTTP_METHODS = ['get', 'head', 'options'];
 const IDEMPOTENT_HTTP_METHODS = SAFE_HTTP_METHODS.concat(['put', 'delete']);
 
-export function isRetryableError(error: AxiosError) {
+export function isRetryableError(error: AxiosError): boolean {
   return (
     error.code !== 'ECONNABORTED' &&
     (!error.response || (error.response.status >= 500 && error.response.status <= 599))
   );
 }
 
-export function isSafeRequestError(error: AxiosError) {
+export function isSafeRequestError(error: AxiosError): boolean {
   if (!error.config?.method) {
     // Cannot determine if the request can be retried
     return false;
@@ -108,7 +108,7 @@ export function isSafeRequestError(error: AxiosError) {
   return isRetryableError(error) && SAFE_HTTP_METHODS.indexOf(error.config.method) !== -1;
 }
 
-export function isIdempotentRequestError(error: AxiosError) {
+export function isIdempotentRequestError(error: AxiosError): boolean {
   if (!error.config?.method) {
     // Cannot determine if the request can be retried
     return false;
@@ -116,7 +116,7 @@ export function isIdempotentRequestError(error: AxiosError) {
   return isRetryableError(error) && IDEMPOTENT_HTTP_METHODS.indexOf(error.config.method) !== -1;
 }
 
-export function isNetworkOrIdempotentRequestError(error: AxiosError) {
+export function isNetworkOrIdempotentRequestError(error: AxiosError): boolean {
   return isNetworkError(error) || isIdempotentRequestError(error);
 }
 
@@ -128,7 +128,7 @@ export function exponentialDelay(
   retryNumber = 0,
   _error: AxiosError | undefined = undefined,
   delayFactor = 100
-) {
+): number {
   const delay = 2 ** retryNumber * delayFactor;
   const randomSum = delay * 0.2 * Math.random(); // 0-20% of the delay
   return delay + randomSum;

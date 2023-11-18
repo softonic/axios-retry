@@ -5,7 +5,4 @@
       "source.fixAll.eslint": true
     }
   },
-  "eslint.options": {
-    "overrideConfigFile": "./.eslintrc"
-  }
 }
