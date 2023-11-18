@@ -12,11 +12,11 @@
     "index.d.ts"
   ],
   "scripts": {
-    "lint": "eslint src/*.ts",
+    "lint": "eslint .",
     "pretest": "npm run lint",
     "test": "ts-node --project tsconfig-cjs.json node_modules/jasmine/bin/jasmine",
     "prebuild": "npm run test",
-    "build": "rm -fr dist/* && tsc -p tsconfig.json && tsc -p tsconfig-cjs.json && ./fixup",
+    "build": "rm -fr dist/* && tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
     "prerelease": "npm run build",
     "release": "npm version -m \"New version: %s\"",
     "postrelease": "npm run push && npm publish",
@@ -30,8 +30,10 @@
     ]
   },
   "dependencies": {
-    "axios": "^1.6.2",
     "is-retry-allowed": "^2.2.0"
+  },
+  "peerDependencies": {
+    "axios": "^0 || ^1"
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",
@@ -39,6 +41,7 @@
     "@types/jasmine": "^5.1.2",
     "@typescript-eslint/eslint-plugin": "^6.11.0",
     "@typescript-eslint/parser": "^6.11.0",
+    "axios": "^1.6.2",
     "eslint": "^8.53.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-jasmine": "^4.1.3",
@@ -58,11 +61,12 @@
   "bugs": {
     "url": "https://github.com/softonic/axios-retry/issues"
   },
-  "types": "dist/esm/index.d.ts",
+  "types": "dist/cjs/index.d.ts",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "exports": {
     ".": {
+      "types": "./dist/esm/index.d.ts",
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
     },

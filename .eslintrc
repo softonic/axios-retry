@@ -1,13 +1,14 @@
 {
   "extends": [
-    "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended",
     "plugin:jasmine/recommended",
     "prettier"
   ],
   "parser": "@typescript-eslint/parser",
   "plugins": ["jasmine", "@typescript-eslint", "prettier"],
+  "ignorePatterns": [
+    "dist/**/*"
+  ],
   "rules": {
     "@typescript-eslint/no-namespace": "off",
     "@typescript-eslint/no-explicit-any": "off",
@@ -24,18 +25,6 @@
     ],
     "jasmine/no-spec-dupes": ["warn", "branch"],
     "jasmine/no-suite-dupes": ["warn", "branch"],
-    "valid-jsdoc": [
-      "warn",
-      {
-        "requireReturn": false,
-        "requireParamDescription": false,
-        "requireReturnDescription": false,
-        "prefer": {
-          "returns": "return",
-          "params": "param"
-        }
-      }
-    ],
     "complexity": ["warn", 7],
     "no-param-reassign": ["error", { "props": false }],
     "no-underscore-dangle": ["error", { "allowAfterThis": true }],

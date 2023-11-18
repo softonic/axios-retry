@@ -1,0 +1,11 @@
+{
+  "eslint.nodePath": "./node_modules/eslint",
+  "[typescript]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true
+    }
+  },
+  "eslint.options": {
+    "overrideConfigFile": "./.eslintrc"
+  }
+}
