@@ -3,7 +3,7 @@
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": "src",
-    "declaration": true,
+    "declaration": false,
     "esModuleInterop": true,
     "inlineSourceMap": false,
     "lib": ["esnext"],

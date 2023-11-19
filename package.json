@@ -6,9 +6,6 @@
   "license": "Apache-2.0",
   "homepage": "https://github.com/softonic/axios-retry",
   "files": [
-    "es",
-    "lib",
-    "index.js",
     "index.d.ts"
   ],
   "scripts": {
@@ -17,6 +14,7 @@
     "test": "ts-node --project tsconfig-cjs.json node_modules/jasmine/bin/jasmine",
     "prebuild": "npm run test",
     "build": "rm -fr dist/* && tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
+    "postbuild": "tsc --declaration --emitDeclarationOnly --outDir dist/",
     "prerelease": "npm run build",
     "release": "npm version -m \"New version: %s\"",
     "postrelease": "npm run push && npm publish",
@@ -61,12 +59,12 @@
   "bugs": {
     "url": "https://github.com/softonic/axios-retry/issues"
   },
-  "types": "dist/cjs/index.d.ts",
+  "types": "dist/index.d.ts",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "exports": {
     ".": {
-      "types": "./dist/esm/index.d.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
     },
