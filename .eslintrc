@@ -1,5 +1,6 @@
 {
   "extends": [
+    "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:jasmine/recommended",
     "prettier"
@@ -31,6 +32,7 @@
     "object-shorthand": ["error", "always", { "avoidQuotes": true }],
     "comma-dangle": ["warn", "never"],
     "consistent-return": "off",
-    "no-restricted-properties":"off"
+    "no-restricted-properties":"off",
+    "no-unused-vars": "off",
   }
 }

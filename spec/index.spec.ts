@@ -436,9 +436,8 @@ describe('axiosRetry(axios, { retries, onRetry })', () => {
       const onRetry = (retryCount, err, requestConfig) => {
         retryCalled += 1;
         finalRetryCount = retryCount;
-        // eslint-disable-next-line no-unused-expressions
+
         expect(err).not.toBe(undefined);
-        // eslint-disable-next-line no-unused-expressions
         expect(requestConfig).not.toBe(undefined);
       };
       axiosRetry(client, { retries: 2, onRetry });
@@ -457,9 +456,8 @@ describe('axiosRetry(axios, { retries, onRetry })', () => {
       const onRetry = (retryCount, err, requestConfig) => {
         retryCalled += 1;
         finalRetryCount = retryCount;
-        // eslint-disable-next-line no-unused-expressions
+
         expect(err).not.toBe(undefined);
-        // eslint-disable-next-line no-unused-expressions
         expect(requestConfig).not.toBe(undefined);
       };
       axiosRetry(client, { retries: 2 });
@@ -485,20 +483,18 @@ describe('axiosRetry(axios, { retries, onRetry })', () => {
       let retryCalled = 0;
       let finalRetryCount = 0;
       const onRetry = (retryCount, err, requestConfig) =>
-        new Promise((resolve) => {
+        new Promise<void>((resolve) => {
           setTimeout(() => {
             retryCalled += 1;
             finalRetryCount = retryCount;
-            // eslint-disable-next-line no-unused-expressions
+
             expect(err).not.toBe(undefined);
-            // eslint-disable-next-line no-unused-expressions
             expect(requestConfig).not.toBe(undefined);
             resolve(void 0);
           }, 100);
         });
 
       axiosRetry(client, { retries: 2, onRetry });
-
       client.get('http://example.com/test').catch(() => {
         expect(retryCalled).toBe(2);
         expect(finalRetryCount).toBe(2);
@@ -513,15 +509,13 @@ describe('axiosRetry(axios, { retries, onRetry })', () => {
       let retryCalled = 0;
       let finalRetryCount = 0;
       const onRetry = (retryCount, err, requestConfig) =>
-        new Promise((resolve, reject) => {
+        new Promise<void>((resolve, reject) => {
           setTimeout(() => {
             retryCalled += 1;
             finalRetryCount = retryCount;
-            // eslint-disable-next-line no-unused-expressions
-            expect(err).not.toBe(undefined);
-            // eslint-disable-next-line no-unused-expressions
-            expect(requestConfig).not.toBe(undefined);
 
+            expect(err).not.toBe(undefined);
+            expect(requestConfig).not.toBe(undefined);
             reject(new Error('onRetry error'));
           }, 100);
         });
@@ -549,20 +543,17 @@ describe('axiosRetry(axios, { retries, onRetry })', () => {
       let retryCalled = 0;
       let finalRetryCount = 0;
       const onRetry = (retryCount, err, requestConfig) =>
-        new Promise((resolve) => {
+        new Promise<void>((resolve) => {
           setTimeout(() => {
             retryCalled += 1;
             finalRetryCount = retryCount;
-            // eslint-disable-next-line no-unused-expressions
+
             expect(err).not.toBe(undefined);
-            // eslint-disable-next-line no-unused-expressions
             expect(requestConfig).not.toBe(undefined);
             resolve(void 0);
           }, 100);
         });
-
       axiosRetry(client, { retries: 2 });
-
       client
         .get('http://example.com/test', {
           'axios-retry': {

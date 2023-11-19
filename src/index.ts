@@ -25,7 +25,11 @@ export namespace IAxiosRetry {
     /**
      * A callback to get notified when a retry occurs, the number of times it has occurred, and the error
      */
-    onRetry?: (retryCount: number, error: AxiosError, requestConfig: AxiosRequestConfig) => void;
+    onRetry?: (
+      retryCount: number,
+      error: AxiosError,
+      requestConfig: AxiosRequestConfig
+    ) => Promise<void> | void;
   }
 
   export interface IAxiosRetryConfigExtended extends IAxiosRetryConfig {
