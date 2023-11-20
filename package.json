@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "homepage": "https://github.com/softonic/axios-retry",
   "files": [
-    "index.d.ts"
+    "dist"
   ],
   "scripts": {
     "lint": "eslint .",
