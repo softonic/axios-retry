@@ -1,77 +1,75 @@
 import type { AxiosError, AxiosRequestConfig, AxiosInstance, AxiosStatic } from 'axios';
 import isRetryAllowed from 'is-retry-allowed';
 
-export namespace IAxiosRetry {
-  export interface IAxiosRetryConfig {
-    /**
-     * The number of times to retry before failing
-     * default: 3
-     */
-    retries?: number;
-    /**
-     * Defines if the timeout should be reset between retries
-     * default: false
-     */
-    shouldResetTimeout?: boolean;
-    /**
-     * A callback to further control if a request should be retried.
-     * default: it retries if it is a network error or a 5xx error on an idempotent request (GET, HEAD, OPTIONS, PUT or DELETE).
-     */
-    retryCondition?: (error: AxiosError) => boolean | Promise<boolean>;
-    /**
-     * A callback to further control the delay between retry requests. By default there is no delay.
-     */
-    retryDelay?: (retryCount: number, error: AxiosError) => number;
-    /**
-     * A callback to get notified when a retry occurs, the number of times it has occurred, and the error
-     */
-    onRetry?: (
-      retryCount: number,
-      error: AxiosError,
-      requestConfig: AxiosRequestConfig
-    ) => Promise<void> | void;
-  }
+export interface IAxiosRetryConfig {
+  /**
+   * The number of times to retry before failing
+   * default: 3
+   */
+  retries?: number;
+  /**
+   * Defines if the timeout should be reset between retries
+   * default: false
+   */
+  shouldResetTimeout?: boolean;
+  /**
+   * A callback to further control if a request should be retried.
+   * default: it retries if it is a network error or a 5xx error on an idempotent request (GET, HEAD, OPTIONS, PUT or DELETE).
+   */
+  retryCondition?: (error: AxiosError) => boolean | Promise<boolean>;
+  /**
+   * A callback to further control the delay between retry requests. By default there is no delay.
+   */
+  retryDelay?: (retryCount: number, error: AxiosError) => number;
+  /**
+   * A callback to get notified when a retry occurs, the number of times it has occurred, and the error
+   */
+  onRetry?: (
+    retryCount: number,
+    error: AxiosError,
+    requestConfig: AxiosRequestConfig
+  ) => Promise<void> | void;
+}
 
-  export interface IAxiosRetryConfigExtended extends IAxiosRetryConfig {
-    /**
-     * The number of times the request was retried
-     */
-    retryCount?: number;
-    /**
-     * The last time the request was retried (timestamp in milliseconds)
-     */
-    lastRequestTime?: number;
-  }
+export interface IAxiosRetryConfigExtended extends IAxiosRetryConfig {
+  /**
+   * The number of times the request was retried
+   */
+  retryCount?: number;
+  /**
+   * The last time the request was retried (timestamp in milliseconds)
+   */
+  lastRequestTime?: number;
+}
 
-  export interface IAxiosRetryReturn {
-    /**
-     * The interceptorId for the request interceptor
-     */
-    requestInterceptorId: number;
-    /**
-     * The interceptorId for the response interceptor
-     */
-    responseInterceptorId: number;
-  }
+export interface IAxiosRetryReturn {
+  /**
+   * The interceptorId for the request interceptor
+   */
+  requestInterceptorId: number;
+  /**
+   * The interceptorId for the response interceptor
+   */
+  responseInterceptorId: number;
+}
 
-  export interface AxiosRetry {
-    (
-      axiosInstance: AxiosStatic | AxiosInstance,
-      axiosRetryConfig?: IAxiosRetryConfig
-    ): IAxiosRetryReturn;
+export interface AxiosRetry {
+  (
+    axiosInstance: AxiosStatic | AxiosInstance,
+    axiosRetryConfig?: IAxiosRetryConfig
+  ): IAxiosRetryReturn;
 
-    isNetworkError(error: AxiosError): boolean;
-    isRetryableError(error: AxiosError): boolean;
-    isSafeRequestError(error: AxiosError): boolean;
-    isIdempotentRequestError(error: AxiosError): boolean;
-    isNetworkOrIdempotentRequestError(error: AxiosError): boolean;
-    exponentialDelay(retryNumber?: number, error?: AxiosError, delayFactor?: number): number;
-  }
+  isNetworkError(error: AxiosError): boolean;
+  isRetryableError(error: AxiosError): boolean;
+  isSafeRequestError(error: AxiosError): boolean;
+  isIdempotentRequestError(error: AxiosError): boolean;
+  isNetworkOrIdempotentRequestError(error: AxiosError): boolean;
+  exponentialDelay(retryNumber?: number, error?: AxiosError, delayFactor?: number): number;
 }
 
 declare module 'axios' {
   export interface AxiosRequestConfig {
-    'axios-retry'?: IAxiosRetry.IAxiosRetryConfigExtended;
+    'axios-retry'?: IAxiosRetryConfigExtended;
   }
 }
 
@@ -138,7 +136,7 @@ export function exponentialDelay(
   return delay + randomSum;
 }
 
-export const DEFAULT_OPTIONS: Required<IAxiosRetry.IAxiosRetryConfig> = {
+export const DEFAULT_OPTIONS: Required<IAxiosRetryConfig> = {
   retries: 3,
   retryCondition: isNetworkOrIdempotentRequestError,
   retryDelay: noDelay,
@@ -148,20 +146,20 @@ export const DEFAULT_OPTIONS: Required<IAxiosRetry.IAxiosRetryConfig> = {
 
 function getRequestOptions(
   config: AxiosRequestConfig,
-  defaultOptions: IAxiosRetry.IAxiosRetryConfig
-): Required<IAxiosRetry.IAxiosRetryConfig> & IAxiosRetry.IAxiosRetryConfigExtended {
+  defaultOptions: IAxiosRetryConfig
+): Required<IAxiosRetryConfig> & IAxiosRetryConfigExtended {
   return { ...DEFAULT_OPTIONS, ...defaultOptions, ...config[namespace] };
 }
 
 function setCurrentState(
   config: AxiosRequestConfig,
-  defaultOptions: IAxiosRetry.IAxiosRetryConfig | undefined
+  defaultOptions: IAxiosRetryConfig | undefined
 ) {
   const currentState = getRequestOptions(config, defaultOptions || {});
   currentState.retryCount = currentState.retryCount || 0;
   currentState.lastRequestTime = currentState.lastRequestTime || Date.now();
   config[namespace] = currentState;
-  return currentState as Required<IAxiosRetry.IAxiosRetryConfigExtended>;
+  return currentState as Required<IAxiosRetryConfigExtended>;
 }
 
 function fixConfig(axiosInstance: AxiosInstance | AxiosStatic, config: AxiosRequestConfig) {
@@ -179,7 +177,7 @@ function fixConfig(axiosInstance: AxiosInstance | AxiosStatic, config: AxiosRequ
 }
 
 async function shouldRetry(
-  currentState: Required<IAxiosRetry.IAxiosRetryConfig> & IAxiosRetry.IAxiosRetryConfigExtended,
+  currentState: Required<IAxiosRetryConfig> & IAxiosRetryConfigExtended,
   error: AxiosError
 ) {
   const { retries, retryCondition } = currentState;
@@ -198,7 +196,7 @@ async function shouldRetry(
   return shouldRetryOrPromise;
 }
 
-const axiosRetry: IAxiosRetry.AxiosRetry = (axiosInstance, defaultOptions) => {
+const axiosRetry: AxiosRetry = (axiosInstance, defaultOptions) => {
   const requestInterceptorId = axiosInstance.interceptors.request.use((config) => {
     setCurrentState(config, defaultOptions);
     return config;
