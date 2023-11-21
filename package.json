@@ -13,8 +13,9 @@
     "pretest": "npm run lint",
     "test": "ts-node --project tsconfig-cjs.json node_modules/jasmine/bin/jasmine",
     "prebuild": "npm run test",
-    "build": "rm -fr dist/* && tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
-    "postbuild": "tsc --declaration --emitDeclarationOnly --outDir dist/",
+    "build": "rm -fr dist/* && npm run build:esm && npm run build:cjs",
+    "build:esm": "tsc -p tsconfig.json && echo '{\"type\":\"module\"}' > dist/esm/package.json",
+    "build:cjs": "tsc -p tsconfig-cjs.json && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
     "prerelease": "npm run build",
     "release": "npm version -m \"New version: %s\"",
     "postrelease": "npm run push && npm publish",
@@ -59,14 +60,19 @@
   "bugs": {
     "url": "https://github.com/softonic/axios-retry/issues"
   },
-  "types": "dist/index.d.ts",
+  "types": "dist/cjs/index.d.ts",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
     },
     "./package.json": "./package.json"
   }
