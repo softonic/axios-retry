@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [4.0.0] - 2023-11-25
+
+- Implementation migrated to Typescript
+- Updated all deps
+
 ## [3.9.1] - 2023-11-16
 
 - **Revert**: Export of type definitions, depending on whether it is ES Module or CommonJS
