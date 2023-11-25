@@ -1,7 +1,19 @@
 {
-  "extends": ["airbnb-base", "plugin:jasmine/recommended", "prettier"],
-  "plugins": ["jasmine", "prettier"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:jasmine/recommended",
+    "prettier"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["jasmine", "@typescript-eslint", "prettier"],
+  "ignorePatterns": [
+    "dist/**/*"
+  ],
   "rules": {
+    "@typescript-eslint/no-namespace": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
     "prettier/prettier": [
       "error",
       {
@@ -9,31 +21,18 @@
         "trailingComma": "none",
         "printWidth": 100,
         "semi": true,
-        "parser": "babel"
+        "parser": "typescript"
       }
     ],
     "jasmine/no-spec-dupes": ["warn", "branch"],
     "jasmine/no-suite-dupes": ["warn", "branch"],
-
-    "valid-jsdoc": [
-      "warn",
-      {
-        "requireReturn": false,
-        "requireParamDescription": false,
-        "requireReturnDescription": false,
-        "prefer": {
-          "returns": "return",
-          "params": "param"
-        }
-      }
-    ],
     "complexity": ["warn", 7],
     "no-param-reassign": ["error", { "props": false }],
     "no-underscore-dangle": ["error", { "allowAfterThis": true }],
     "object-shorthand": ["error", "always", { "avoidQuotes": true }],
     "comma-dangle": ["warn", "never"],
     "consistent-return": "off",
-    "no-restricted-properties":"off"
-
+    "no-restricted-properties":"off",
+    "no-unused-vars": "off",
   }
 }
