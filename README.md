@@ -14,7 +14,7 @@ npm install axios-retry
 
 ```js
 // CommonJS
-// const axiosRetry = require('axios-retry');
+// const axiosRetry = require('axios-retry').default;
 
 // ES6
 import axiosRetry from 'axios-retry';
