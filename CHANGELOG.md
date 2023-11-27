@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Implementation migrated to Typescript
 - Updated all deps
+- Import from CommonJS procedure updated to `const axiosRetry = require('axios-retry').default`
 
 ## [3.9.1] - 2023-11-16
 
