@@ -1,5 +1,22 @@
-import type { AxiosError, AxiosRequestConfig, AxiosInstance, AxiosStatic } from 'axios';
+import type {
+  AxiosError,
+  AxiosRequestConfig,
+  AxiosInstance,
+  AxiosStatic,
+  AxiosInterceptorManager,
+  AxiosResponse,
+  InternalAxiosRequestConfig
+} from 'axios';
 import isRetryAllowed from 'is-retry-allowed';
+
+interface AxiosResponseInterceptorManagerExtended extends AxiosInterceptorManager<AxiosResponse> {
+  handlers: Array<{
+    fulfilled: ((value: AxiosResponse) => AxiosResponse | Promise<AxiosResponse>) | null;
+    rejected: ((error: any) => any) | null;
+    synchronous: boolean;
+    runWhen: (config: InternalAxiosRequestConfig) => boolean;
+  }>;
+}
 
 export interface IAxiosRetryConfig {
   /**
@@ -12,6 +29,11 @@ export interface IAxiosRetryConfig {
    * default: false
    */
   shouldResetTimeout?: boolean;
+  /**
+   * Disable other response interceptors when axios-retry is retrying the request
+   * default: false
+   */
+  disableOtherResponseInterceptors?: boolean;
   /**
    * A callback to further control if a request should be retried.
    * default: it retries if it is a network error or a 5xx error on an idempotent request (GET, HEAD, OPTIONS, PUT or DELETE).
@@ -141,6 +163,7 @@ export const DEFAULT_OPTIONS: Required<IAxiosRetryConfig> = {
   retryCondition: isNetworkOrIdempotentRequestError,
   retryDelay: noDelay,
   shouldResetTimeout: false,
+  disableOtherResponseInterceptors: false,
   onRetry: () => {}
 };
 
@@ -196,13 +219,14 @@ async function shouldRetry(
   return shouldRetryOrPromise;
 }
 
+let responseInterceptorId: number;
 const axiosRetry: AxiosRetry = (axiosInstance, defaultOptions) => {
   const requestInterceptorId = axiosInstance.interceptors.request.use((config) => {
     setCurrentState(config, defaultOptions);
     return config;
   });
 
-  const responseInterceptorId = axiosInstance.interceptors.response.use(null, async (error) => {
+  responseInterceptorId = axiosInstance.interceptors.response.use(null, async (error) => {
     const { config } = error;
     // If we have no information to retry the request
     if (!config) {
@@ -227,7 +251,17 @@ const axiosRetry: AxiosRetry = (axiosInstance, defaultOptions) => {
       config.transformRequest = [(data) => data];
       await onRetry(currentState.retryCount, error, config);
       return new Promise((resolve) => {
-        setTimeout(() => resolve(axiosInstance(config)), delay);
+        setTimeout(() => {
+          if (currentState.disableOtherResponseInterceptors && currentState.retryCount === 1) {
+            const extendedInterceptor = axiosInstance.interceptors
+              .response as AxiosResponseInterceptorManagerExtended;
+            const axiosRetryInterceptor = extendedInterceptor.handlers[responseInterceptorId];
+            extendedInterceptor.handlers = [axiosRetryInterceptor];
+            resolve(axiosInstance(config));
+            return;
+          }
+          resolve(axiosInstance(config));
+        }, delay);
       });
     }
     return Promise.reject(error);

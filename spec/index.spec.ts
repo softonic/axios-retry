@@ -569,6 +569,53 @@ describe('axiosRetry(axios, { retries, onRetry })', () => {
   });
 });
 
+describe('axiosRetry(axios, { disableOtherResponseInterceptors })', () => {
+  afterEach(() => {
+    nock.cleanAll();
+    nock.enableNetConnect();
+  });
+
+  it('should not multiple response interceptor', (done) => {
+    const client = axios.create();
+    nock('http://example.com').get('/test').times(2).replyWithError(NETWORK_ERROR);
+    nock('http://example.com').get('/test').reply(200, 'It worked!');
+
+    axiosRetry(client, { disableOtherResponseInterceptors: true });
+
+    let anotherInterceptorCallCount = 0;
+    client.interceptors.response.use((result) => {
+      anotherInterceptorCallCount += 1;
+      return result;
+    }, null);
+
+    client.get('http://example.com/test').then((result) => {
+      expect(result.status).toBe(200);
+      expect(anotherInterceptorCallCount).toBe(1);
+      done();
+    }, done.fail);
+  });
+
+  it('should multiple response interceptor', (done) => {
+    const client = axios.create();
+    nock('http://example.com').get('/test').times(2).replyWithError(NETWORK_ERROR);
+    nock('http://example.com').get('/test').reply(200, 'It worked!');
+
+    axiosRetry(client, { disableOtherResponseInterceptors: false });
+
+    let anotherInterceptorCallCount = 0;
+    client.interceptors.response.use((result) => {
+      anotherInterceptorCallCount += 1;
+      return result;
+    }, null);
+
+    client.get('http://example.com/test').then((result) => {
+      expect(result.status).toBe(200);
+      expect(anotherInterceptorCallCount).toBe(3);
+      done();
+    }, done.fail);
+  });
+});
+
 describe('isNetworkError(error)', () => {
   it('should be true for network errors like connection refused', () => {
     const connectionRefusedError = new AxiosError();
