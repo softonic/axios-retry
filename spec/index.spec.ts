@@ -575,44 +575,96 @@ describe('axiosRetry(axios, { disableOtherResponseInterceptors })', () => {
     nock.enableNetConnect();
   });
 
-  it('should not multiple response interceptor', (done) => {
-    const client = axios.create();
-    nock('http://example.com').get('/test').times(2).replyWithError(NETWORK_ERROR);
-    nock('http://example.com').get('/test').reply(200, 'It worked!');
+  describe('successful after retry', () => {
+    it('should not multiple response interceptor', (done) => {
+      const client = axios.create();
+      nock('http://example.com').get('/test').times(2).replyWithError(NETWORK_ERROR);
+      nock('http://example.com').get('/test').reply(200, 'It worked!');
 
-    axiosRetry(client, { disableOtherResponseInterceptors: true });
+      axiosRetry(client, { retries: 3, disableOtherResponseInterceptors: true });
 
-    let anotherInterceptorCallCount = 0;
-    client.interceptors.response.use((result) => {
-      anotherInterceptorCallCount += 1;
-      return result;
-    }, null);
+      let anotherInterceptorCallCount = 0;
+      client.interceptors.response.use((result) => {
+        anotherInterceptorCallCount += 1;
+        return result;
+      }, null);
 
-    client.get('http://example.com/test').then((result) => {
-      expect(result.status).toBe(200);
-      expect(anotherInterceptorCallCount).toBe(1);
-      done();
-    }, done.fail);
+      client.get('http://example.com/test').then((result) => {
+        expect(result.status).toBe(200);
+        expect(anotherInterceptorCallCount).toBe(1);
+        done();
+      }, done.fail);
+    });
+
+    it('should multiple response interceptor', (done) => {
+      const client = axios.create();
+      nock('http://example.com').get('/test').times(2).replyWithError(NETWORK_ERROR);
+      nock('http://example.com').get('/test').reply(200, 'It worked!');
+
+      axiosRetry(client, { retries: 3, disableOtherResponseInterceptors: false });
+
+      let anotherInterceptorCallCount = 0;
+      client.interceptors.response.use((result) => {
+        anotherInterceptorCallCount += 1;
+        return result;
+      }, null);
+
+      client.get('http://example.com/test').then((result) => {
+        expect(result.status).toBe(200);
+        expect(anotherInterceptorCallCount).toBe(3);
+        done();
+      }, done.fail);
+    });
   });
 
-  it('should multiple response interceptor', (done) => {
-    const client = axios.create();
-    nock('http://example.com').get('/test').times(2).replyWithError(NETWORK_ERROR);
-    nock('http://example.com').get('/test').reply(200, 'It worked!');
+  describe('failure after retry', () => {
+    it('should not multiple response interceptor', (done) => {
+      const client = axios.create();
+      nock('http://example.com').get('/test').times(3).replyWithError(NETWORK_ERROR);
 
-    axiosRetry(client, { disableOtherResponseInterceptors: false });
+      axiosRetry(client, { retries: 3, disableOtherResponseInterceptors: true });
 
-    let anotherInterceptorCallCount = 0;
-    client.interceptors.response.use((result) => {
-      anotherInterceptorCallCount += 1;
-      return result;
-    }, null);
+      let anotherInterceptorCallCount = 0;
+      client.interceptors.response.use(null, (error) => {
+        anotherInterceptorCallCount += 1;
+        return Promise.reject(error);
+      });
 
-    client.get('http://example.com/test').then((result) => {
-      expect(result.status).toBe(200);
-      expect(anotherInterceptorCallCount).toBe(3);
-      done();
-    }, done.fail);
+      client
+        .get('http://example.com/test')
+        .then(
+          () => done.fail(),
+          (error) => {
+            expect(anotherInterceptorCallCount).toBe(1);
+            done();
+          }
+        )
+        .catch(done.fail);
+    });
+
+    it('should multiple response interceptor', (done) => {
+      const client = axios.create();
+      nock('http://example.com').get('/test').times(3).replyWithError(NETWORK_ERROR);
+
+      axiosRetry(client, { retries: 3, disableOtherResponseInterceptors: false });
+
+      let anotherInterceptorCallCount = 0;
+      client.interceptors.response.use(null, (error) => {
+        anotherInterceptorCallCount += 1;
+        return Promise.reject(error);
+      });
+
+      client
+        .get('http://example.com/test')
+        .then(
+          () => done.fail(),
+          (error) => {
+            expect(anotherInterceptorCallCount).toBe(4);
+            done();
+          }
+        )
+        .catch(done.fail);
+    });
   });
 });
 
