@@ -14,7 +14,7 @@ interface AxiosResponseInterceptorManagerExtended extends AxiosInterceptorManage
     fulfilled: ((value: AxiosResponse) => AxiosResponse | Promise<AxiosResponse>) | null;
     rejected: ((error: any) => any) | null;
     synchronous: boolean;
-    runWhen: (config: InternalAxiosRequestConfig) => boolean;
+    runWhen: (config: InternalAxiosRequestConfig) => boolean | null;
   }>;
 }
 
@@ -253,10 +253,10 @@ const axiosRetry: AxiosRetry = (axiosInstance, defaultOptions) => {
       return new Promise((resolve) => {
         setTimeout(() => {
           if (currentState.disableOtherResponseInterceptors && currentState.retryCount === 1) {
-            const extendedInterceptor = axiosInstance.interceptors
+            const responseInterceptors = axiosInstance.interceptors
               .response as AxiosResponseInterceptorManagerExtended;
-            const axiosRetryInterceptor = extendedInterceptor.handlers[responseInterceptorId];
-            extendedInterceptor.handlers = [axiosRetryInterceptor];
+            const axiosRetryInterceptor = responseInterceptors.handlers[responseInterceptorId];
+            responseInterceptors.handlers = [axiosRetryInterceptor];
             resolve(axiosInstance(config));
             return;
           }
