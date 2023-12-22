@@ -255,8 +255,14 @@ const axiosRetry: AxiosRetry = (axiosInstance, defaultOptions) => {
           if (currentState.disableOtherResponseInterceptors && currentState.retryCount === 1) {
             const responseInterceptors = axiosInstance.interceptors
               .response as AxiosResponseInterceptorManagerExtended;
-            const axiosRetryInterceptor = responseInterceptors.handlers[responseInterceptorId];
-            responseInterceptors.handlers = [axiosRetryInterceptor];
+            const interceptors = responseInterceptors.handlers.splice(0, responseInterceptorId + 1);
+
+            // Disable only intercepter on rejected (do not disable fullfilled)
+            responseInterceptors.handlers = interceptors.map((v, index) => {
+              if (index === responseInterceptorId) return v;
+              return { ...v, rejected: null };
+            });
+
             resolve(axiosInstance(config));
             return;
           }
