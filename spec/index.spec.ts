@@ -569,6 +569,121 @@ describe('axiosRetry(axios, { retries, onRetry })', () => {
   });
 });
 
+describe('axiosRetry(axios, { onMaxRetryTimesExceeded })', () => {
+  const customError = new Error('CustomErrorAfterMaxRetryTimesExceeded');
+
+  afterEach(() => {
+    nock.cleanAll();
+    nock.enableNetConnect();
+  });
+
+  describe('when the onMaxRetryTimesExceeded is handled', () => {
+    it('should use onMaxRetryTimesExceeded set on request', (done) => {
+      const client = axios.create();
+      setupResponses(client, [() => nock('http://example.com').get('/test').reply(500, 'Failed!')]);
+      let calledCount = 0;
+      let finalRetryCount = 0;
+      const onMaxRetryTimesExceeded = (err, retryCount) => {
+        calledCount += 1;
+        finalRetryCount = retryCount;
+
+        expect(err).not.toBe(undefined);
+      };
+      axiosRetry(client, { retries: 2, onMaxRetryTimesExceeded });
+      client
+        .get('http://example.com/test')
+        .then(
+          () => done.fail(),
+          (error) => {
+            expect(calledCount).toBe(1);
+            expect(finalRetryCount).toBe(2);
+            done();
+          }
+        )
+        .catch(done.fail);
+    });
+
+    it('should reject with the custom error', (done) => {
+      const client = axios.create();
+      setupResponses(client, [() => nock('http://example.com').get('/test').reply(500, 'Failed!')]);
+      const onMaxRetryTimesExceeded = () => {
+        throw customError;
+      };
+      axiosRetry(client, {
+        retries: 2,
+        onMaxRetryTimesExceeded
+      });
+      client
+        .get('http://example.com/test')
+        .then(
+          () => done.fail(),
+          (error) => {
+            expect(error).toEqual(customError);
+            done();
+          }
+        )
+        .catch(done.fail);
+    });
+  });
+
+  describe('when the onMaxRetryTimesExceeded is returning a promise', () => {
+    it('should use onMaxRetryTimesExceeded set on request', (done) => {
+      const client = axios.create();
+      setupResponses(client, [() => nock('http://example.com').get('/test').reply(500, 'Failed!')]);
+      let calledCount = 0;
+      let finalRetryCount = 0;
+      const onMaxRetryTimesExceeded = (err, retryCount) =>
+        new Promise<void>((resolve) => {
+          setTimeout(() => {
+            calledCount += 1;
+            finalRetryCount = retryCount;
+
+            expect(err).not.toBe(undefined);
+            resolve(void 0);
+          }, 100);
+        });
+      axiosRetry(client, { retries: 2, onMaxRetryTimesExceeded });
+      client
+        .get('http://example.com/test')
+        .then(
+          () => done.fail(),
+          (error) => {
+            expect(calledCount).toBe(1);
+            expect(finalRetryCount).toBe(2);
+            done();
+          }
+        )
+        .catch(done.fail);
+    });
+
+    it('should reject with the custom error', (done) => {
+      const client = axios.create();
+      setupResponses(client, [() => nock('http://example.com').get('/test').reply(500, 'Failed!')]);
+      const onMaxRetryTimesExceeded = (err, retryCount) =>
+        new Promise<void>((_resolve, reject) => {
+          setTimeout(() => {
+            expect(err).not.toBe(undefined);
+            reject(customError);
+          }, 100);
+        });
+      axiosRetry(client, {
+        retries: 2,
+        onMaxRetryTimesExceeded
+      });
+      client
+        .get('http://example.com/test')
+        .then(
+          () => done.fail(),
+          (error) => {
+            expect(error).toEqual(customError);
+            done();
+          }
+        )
+        .catch(done.fail);
+    });
+  });
+});
+
 describe('isNetworkError(error)', () => {
   it('should be true for network errors like connection refused', () => {
     const connectionRefusedError = new AxiosError();
