@@ -29,6 +29,11 @@ export interface IAxiosRetryConfig {
     error: AxiosError,
     requestConfig: AxiosRequestConfig
   ) => Promise<void> | void;
+  /**
+   * After all the retries are failed, this callback will be called with the last error
+   * before throwing the error.
+   */
+  onMaxRetryTimesExceeded?: (error: AxiosError, retryCount: number) => Promise<void> | void;
 }
 
 export interface IAxiosRetryConfigExtended extends IAxiosRetryConfig {
@@ -141,7 +146,8 @@ export const DEFAULT_OPTIONS: Required<IAxiosRetryConfig> = {
   retryCondition: isNetworkOrIdempotentRequestError,
   retryDelay: noDelay,
   shouldResetTimeout: false,
-  onRetry: () => {}
+  onRetry: () => {},
+  onMaxRetryTimesExceeded: () => {}
 };
 
 function getRequestOptions(
@@ -196,6 +202,14 @@ async function shouldRetry(
   return shouldRetryOrPromise;
 }
 
+async function handleMaxRetryTimesExceeded(
+  currentState: Required<IAxiosRetryConfigExtended>,
+  error: AxiosError
+) {
+  if (currentState.retryCount >= currentState.retries)
+    await currentState.onMaxRetryTimesExceeded(error, currentState.retryCount);
+}
+
 const axiosRetry: AxiosRetry = (axiosInstance, defaultOptions) => {
   const requestInterceptorId = axiosInstance.interceptors.request.use((config) => {
     setCurrentState(config, defaultOptions);
@@ -230,6 +244,9 @@ const axiosRetry: AxiosRetry = (axiosInstance, defaultOptions) => {
         setTimeout(() => resolve(axiosInstance(config)), delay);
       });
     }
+
+    await handleMaxRetryTimesExceeded(currentState, error);
+
     return Promise.reject(error);
   });
 
