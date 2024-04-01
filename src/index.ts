@@ -13,6 +13,10 @@ export interface IAxiosRetryConfig {
    */
   shouldResetTimeout?: boolean;
   /**
+   * An optional AbortSignal to abort the retry requests. If the signal is aborted, the retry will stop and will return the last response.
+   */
+  retryAbortSignal?: AbortSignal | null;
+  /**
    * A callback to further control if a request should be retried.
    * default: it retries if it is a network error or a 5xx error on an idempotent request (GET, HEAD, OPTIONS, PUT or DELETE).
    */
@@ -146,6 +150,7 @@ export const DEFAULT_OPTIONS: Required<IAxiosRetryConfig> = {
   retryCondition: isNetworkOrIdempotentRequestError,
   retryDelay: noDelay,
   shouldResetTimeout: false,
+  retryAbortSignal: null,
   onRetry: () => {},
   onMaxRetryTimesExceeded: () => {}
 };
@@ -210,6 +215,31 @@ async function handleMaxRetryTimesExceeded(
     await currentState.onMaxRetryTimesExceeded(error, currentState.retryCount);
 }
 
+function abortableRetryDelay(
+  axiosInstance: AxiosInstance,
+  config: AxiosRequestConfig,
+  delay: number,
+  abortSignal?: AbortSignal | null
+) {
+  if (!abortSignal) {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(axiosInstance(config)), delay);
+    });
+  }
+  return new Promise((resolve, reject) => {
+    if (abortSignal.aborted) {
+      reject(abortSignal.reason);
+    }
+    const timeout = setTimeout(() => {
+      resolve(axiosInstance(config));
+    }, delay);
+    abortSignal.addEventListener('abort', () => {
+      clearTimeout(timeout);
+      reject(abortSignal.reason);
+    });
+  });
+}
+
 const axiosRetry: AxiosRetry = (axiosInstance, defaultOptions) => {
   const requestInterceptorId = axiosInstance.interceptors.request.use((config) => {
     setCurrentState(config, defaultOptions);
@@ -225,7 +255,7 @@ const axiosRetry: AxiosRetry = (axiosInstance, defaultOptions) => {
     const currentState = setCurrentState(config, defaultOptions);
     if (await shouldRetry(currentState, error)) {
       currentState.retryCount += 1;
-      const { retryDelay, shouldResetTimeout, onRetry } = currentState;
+      const { retryDelay, shouldResetTimeout, retryAbortSignal, onRetry } = currentState;
       const delay = retryDelay(currentState.retryCount, error);
       // Axios fails merging this configuration to the default configuration because it has an issue
       // with circular structures: https://github.com/mzabriskie/axios/issues/370
@@ -240,9 +270,7 @@ const axiosRetry: AxiosRetry = (axiosInstance, defaultOptions) => {
       }
       config.transformRequest = [(data) => data];
       await onRetry(currentState.retryCount, error, config);
-      return new Promise((resolve) => {
-        setTimeout(() => resolve(axiosInstance(config)), delay);
-      });
+      return abortableRetryDelay(axiosInstance, config, delay, retryAbortSignal);
     }
 
     await handleMaxRetryTimesExceeded(currentState, error);
