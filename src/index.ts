@@ -41,7 +41,8 @@ export interface IAxiosRetryConfig {
    */
   onMaxRetryTimesExceeded?: (error: AxiosError, retryCount: number) => Promise<void> | void;
   /**
-   * Defines whether a response should be resolved or rejected
+   * A callback to define whether a response should be resolved or rejected. If null is passed, it will fallback to
+   * the axios default (only 2xx status codes are resolved).
    */
   validateResponse?: ((response: AxiosResponse) => boolean) | null;
 }
