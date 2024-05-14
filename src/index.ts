@@ -1,4 +1,10 @@
-import type { AxiosError, AxiosRequestConfig, AxiosInstance, AxiosStatic } from 'axios';
+import type {
+  AxiosError,
+  AxiosRequestConfig,
+  AxiosInstance,
+  AxiosStatic,
+  AxiosResponse
+} from 'axios';
 import isRetryAllowed from 'is-retry-allowed';
 
 export interface IAxiosRetryConfig {
@@ -34,6 +40,10 @@ export interface IAxiosRetryConfig {
    * before throwing the error.
    */
   onMaxRetryTimesExceeded?: (error: AxiosError, retryCount: number) => Promise<void> | void;
+  /**
+   * Defines whether a response should be resolved or rejected
+   */
+  validateResponse?: ((response: AxiosResponse) => boolean) | null;
 }
 
 export interface IAxiosRetryConfigExtended extends IAxiosRetryConfig {
@@ -147,7 +157,8 @@ export const DEFAULT_OPTIONS: Required<IAxiosRetryConfig> = {
   retryDelay: noDelay,
   shouldResetTimeout: false,
   onRetry: () => {},
-  onMaxRetryTimesExceeded: () => {}
+  onMaxRetryTimesExceeded: () => {},
+  validateResponse: null
 };
 
 function getRequestOptions(
@@ -201,6 +212,32 @@ async function shouldRetry(
   }
   return shouldRetryOrPromise;
 }
+async function handleRetry(
+  axiosInstance: AxiosInstance,
+  currentState: Required<IAxiosRetryConfigExtended>,
+  error: AxiosError,
+  config: AxiosRequestConfig
+) {
+  currentState.retryCount += 1;
+  const { retryDelay, shouldResetTimeout, onRetry } = currentState;
+  const delay = retryDelay(currentState.retryCount, error);
+  // Axios fails merging this configuration to the default configuration because it has an issue
+  // with circular structures: https://github.com/mzabriskie/axios/issues/370
+  fixConfig(axiosInstance, config);
+  if (!shouldResetTimeout && config.timeout && currentState.lastRequestTime) {
+    const lastRequestDuration = Date.now() - currentState.lastRequestTime;
+    const timeout = config.timeout - lastRequestDuration - delay;
+    if (timeout <= 0) {
+      return Promise.reject(error);
+    }
+    config.timeout = timeout;
+  }
+  config.transformRequest = [(data) => data];
+  await onRetry(currentState.retryCount, error, config);
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(axiosInstance(config)), delay);
+  });
+}
 
 async function handleMaxRetryTimesExceeded(
   currentState: Required<IAxiosRetryConfigExtended>,
@@ -213,6 +250,10 @@ async function handleMaxRetryTimesExceeded(
 const axiosRetry: AxiosRetry = (axiosInstance, defaultOptions) => {
   const requestInterceptorId = axiosInstance.interceptors.request.use((config) => {
     setCurrentState(config, defaultOptions);
+    if (config[namespace]?.validateResponse) {
+      // by setting this, all HTTP responses will be go through the error interceptor first
+      config.validateStatus = () => false;
+    }
     return config;
   });
 
@@ -223,26 +264,12 @@ const axiosRetry: AxiosRetry = (axiosInstance, defaultOptions) => {
       return Promise.reject(error);
     }
     const currentState = setCurrentState(config, defaultOptions);
+    if (error.response && currentState.validateResponse?.(error.response)) {
+      // no issue with response
+      return error.response;
+    }
     if (await shouldRetry(currentState, error)) {
-      currentState.retryCount += 1;
-      const { retryDelay, shouldResetTimeout, onRetry } = currentState;
-      const delay = retryDelay(currentState.retryCount, error);
-      // Axios fails merging this configuration to the default configuration because it has an issue
-      // with circular structures: https://github.com/mzabriskie/axios/issues/370
-      fixConfig(axiosInstance, config);
-      if (!shouldResetTimeout && config.timeout && currentState.lastRequestTime) {
-        const lastRequestDuration = Date.now() - currentState.lastRequestTime;
-        const timeout = config.timeout - lastRequestDuration - delay;
-        if (timeout <= 0) {
-          return Promise.reject(error);
-        }
-        config.timeout = timeout;
-      }
-      config.transformRequest = [(data) => data];
-      await onRetry(currentState.retryCount, error, config);
-      return new Promise((resolve) => {
-        setTimeout(() => resolve(axiosInstance(config)), delay);
-      });
+      return handleRetry(axiosInstance, currentState, error, config);
     }
 
     await handleMaxRetryTimesExceeded(currentState, error);
