@@ -102,7 +102,9 @@ const IDEMPOTENT_HTTP_METHODS = SAFE_HTTP_METHODS.concat(['put', 'delete']);
 export function isRetryableError(error: AxiosError): boolean {
   return (
     error.code !== 'ECONNABORTED' &&
-    (!error.response || (error.response.status >= 500 && error.response.status <= 599))
+    (!error.response ||
+      error.response.status === 429 ||
+      (error.response.status >= 500 && error.response.status <= 599))
   );
 }
 
@@ -127,16 +129,31 @@ export function isNetworkOrIdempotentRequestError(error: AxiosError): boolean {
   return isNetworkError(error) || isIdempotentRequestError(error);
 }
 
-function noDelay() {
-  return 0;
+export function retryAfter(error: AxiosError | undefined = undefined): number {
+  const retryAfterHeader = error?.response?.headers['retry-after'];
+  if (!retryAfterHeader) {
+    return 0;
+  }
+  // if the retry after header is a number, convert it to milliseconds
+  let retryAfterMs = (Number(retryAfterHeader) || 0) * 1000;
+  // If the retry after header is a date, get the number of milliseconds until that date
+  if (retryAfterMs === 0) {
+    retryAfterMs = (new Date(retryAfterHeader).valueOf() || 0) - Date.now();
+  }
+  return Math.max(0, retryAfterMs);
+}
+
+function noDelay(_retryNumber = 0, error: AxiosError | undefined = undefined) {
+  return Math.max(0, retryAfter(error));
 }
 
 export function exponentialDelay(
   retryNumber = 0,
-  _error: AxiosError | undefined = undefined,
+  error: AxiosError | undefined = undefined,
   delayFactor = 100
 ): number {
-  const delay = 2 ** retryNumber * delayFactor;
+  const calculatedDelay = 2 ** retryNumber * delayFactor;
+  const delay = Math.max(calculatedDelay, retryAfter(error));
   const randomSum = delay * 0.2 * Math.random(); // 0-20% of the delay
   return delay + randomSum;
 }

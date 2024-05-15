@@ -6,6 +6,7 @@ import axiosRetry, {
   isSafeRequestError,
   isIdempotentRequestError,
   exponentialDelay,
+  retryAfter,
   isRetryableError,
   namespace
 } from '../src/index';
@@ -856,6 +857,62 @@ describe('exponentialDelay', () => {
     }
 
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach(assertTime);
+  });
+});
+
+describe('retryAfter', () => {
+  it('should understand a numeric Retry-After header', () => {
+    const errorResponse = new AxiosError('Error response');
+    errorResponse.response = { status: 429 } as AxiosError['response'];
+    // @ts-ignore
+    errorResponse.response.headers = { 'retry-after': '10' };
+    const time = retryAfter(errorResponse);
+
+    expect(time).toBe(10000);
+  });
+
+  it('should ignore a negative numeric Retry-After header', () => {
+    const errorResponse = new AxiosError('Error response');
+    errorResponse.response = { status: 429 } as AxiosError['response'];
+    // @ts-ignore
+    errorResponse.response.headers = { 'retry-after': '-10' };
+    const time = retryAfter(errorResponse);
+
+    expect(time).toBe(0);
+  });
+
+  it('should understand a date Retry-After header', () => {
+    const errorResponse = new AxiosError('Error response');
+    errorResponse.response = { status: 429 } as AxiosError['response'];
+    const date = new Date();
+    date.setSeconds(date.getSeconds() + 10);
+    // @ts-ignore
+    errorResponse.response.headers = { 'retry-after': date.toUTCString() };
+    const time = retryAfter(errorResponse);
+
+    expect(time >= 9000 && time <= 10000).toBe(true);
+  });
+
+  it('should ignore a past Retry-After header', () => {
+    const errorResponse = new AxiosError('Error response');
+    errorResponse.response = { status: 429 } as AxiosError['response'];
+    const date = new Date();
+    date.setSeconds(date.getSeconds() - 10);
+    // @ts-ignore
+    errorResponse.response.headers = { 'retry-after': date.toUTCString() };
+    const time = retryAfter(errorResponse);
+
+    expect(time).toBe(0);
+  });
+
+  it('should ignore an invalid Retry-After header', () => {
+    const errorResponse = new AxiosError('Error response');
+    errorResponse.response = { status: 429 } as AxiosError['response'];
+    // @ts-ignore
+    errorResponse.response.headers = { 'retry-after': 'a couple minutes' };
+    const time = retryAfter(errorResponse);
+
+    expect(time).toBe(0);
   });
 });
 
