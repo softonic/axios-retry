@@ -1,6 +1,6 @@
 import http from 'http';
 import nock from 'nock';
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, isAxiosError } from 'axios';
 import axiosRetry, {
   isNetworkError,
   isSafeRequestError,
@@ -392,6 +392,115 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         expect(result.status).toBe(200);
         done();
       }, done.fail);
+  });
+});
+
+describe('axiosRetry(axios, { validateResponse })', () => {
+  afterEach(() => {
+    nock.cleanAll();
+  });
+
+  describe('when validateResponse is supplied as default option', () => {
+    it('should be able to produce an AxiosError with status code of 200', (done) => {
+      const client = axios.create();
+      setupResponses(client, [
+        () => nock('http://example.com').get('/test').reply(200, 'should retry!')
+      ]);
+      axiosRetry(client, {
+        retries: 0,
+        validateResponse: (response) => response.status !== 200
+      });
+      client.get('http://example.com/test').catch((err) => {
+        expect(isAxiosError(err)).toBeTrue();
+        expect(err.response.status).toBe(200);
+        done();
+      });
+    });
+
+    it('should retry based on supplied logic', (done) => {
+      const client = axios.create();
+      setupResponses(client, [
+        () => nock('http://example.com').get('/test').reply(200, 'should retry!'),
+        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+        () => nock('http://example.com').get('/test').reply(200, 'should retry!'),
+        () => nock('http://example.com').get('/test').reply(200, 'ok!')
+      ]);
+      let retryCount = 0;
+      axiosRetry(client, {
+        retries: 4,
+        retryCondition: () => true,
+        retryDelay: () => {
+          retryCount += 1;
+          return 0;
+        },
+        validateResponse: (response) => {
+          if (response.status < 200 || response.status >= 300) return false;
+          return response.data === 'ok!';
+        }
+      });
+      client.get('http://example.com/test').then((result) => {
+        expect(retryCount).toBe(3);
+        expect(result.status).toBe(200);
+        expect(result.data).toBe('ok!');
+        done();
+      }, done.fail);
+    });
+  });
+
+  describe('when validateResponse is supplied as request-specific configuration', () => {
+    it('should use request-specific configuration instead', (done) => {
+      const client = axios.create();
+      setupResponses(client, [
+        () => nock('http://example.com').get('/test').reply(200, 'should retry!'),
+        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+        () => nock('http://example.com').get('/test').reply(200, 'ok!')
+      ]);
+      axiosRetry(client, {
+        validateResponse: (response) => response.status >= 200 && response.status < 300
+      });
+      client
+        .get('http://example.com/test', {
+          'axios-retry': {
+            retryCondition: () => true,
+            validateResponse: (response) => {
+              if (response.status < 200 || response.status >= 300) return false;
+              return response.data === 'ok!';
+            }
+          }
+        })
+        .then((result) => {
+          expect(result.status).toBe(200);
+          expect(result.data).toBe('ok!');
+          done();
+        }, done.fail);
+    });
+
+    it('should be able to disable default validateResponse passed', (done) => {
+      const client = axios.create();
+      setupResponses(client, [
+        () => nock('http://example.com').get('/test').reply(200, 'should not retry!'),
+        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+        () => nock('http://example.com').get('/test').reply(200, 'ok!')
+      ]);
+      axiosRetry(client, {
+        validateResponse: (response) => {
+          if (response.status < 200 || response.status >= 300) return false;
+          return response.data === 'ok!';
+        }
+      });
+      client
+        .get('http://example.com/test', {
+          'axios-retry': {
+            retryCondition: () => true,
+            validateResponse: null
+          }
+        })
+        .then((result) => {
+          expect(result.status).toBe(200);
+          expect(result.data).toBe('should not retry!');
+          done();
+        }, done.fail);
+    });
   });
 });
 
