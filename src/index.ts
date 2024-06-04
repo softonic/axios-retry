@@ -253,7 +253,16 @@ async function handleRetry(
   config.transformRequest = [(data) => data];
   await onRetry(currentState.retryCount, error, config);
   return new Promise((resolve) => {
-    setTimeout(() => resolve(axiosInstance(config)), delay);
+    const timeout = setTimeout(() => resolve(axiosInstance(config)), delay);
+    if (config.signal?.addEventListener) {
+      config.signal.addEventListener(
+        'abort',
+        () => {
+          clearTimeout(timeout);
+        },
+        { once: true }
+      );
+    }
   });
 }
 

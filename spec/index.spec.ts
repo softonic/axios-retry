@@ -1,6 +1,6 @@
 import http from 'http';
 import nock from 'nock';
-import axios, { AxiosError, isAxiosError } from 'axios';
+import axios, { AxiosError, CanceledError, isAxiosError } from 'axios';
 import axiosRetry, {
   isNetworkError,
   isSafeRequestError,
@@ -324,6 +324,32 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
               }
             )
             .catch(done.fail);
+        });
+      });
+
+      describe('when request is aborted', () => {
+        it('should clearTimeout', (done) => {
+          const client = axios.create({
+            timeout: 100000
+          });
+          setupResponses(client, [() => nock('http://example.com').get('/test').reply(429)]);
+          axiosRetry(client, {
+            retries: 1,
+            retryCondition: () => true,
+            retryDelay: () => 9999999
+          });
+          const abortController = new AbortController();
+          client
+            .get('http://example.com/test', { signal: abortController.signal })
+            .then(
+              () => done.fail(),
+              (error) => {
+                expect(error).toBeInstanceOf(CanceledError);
+                done();
+              }
+            )
+            .catch(done.fail);
+          abortController.abort();
         });
       });
     });
