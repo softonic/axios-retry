@@ -1,6 +1,6 @@
 import http from 'http';
 import nock from 'nock';
-import axios, { AxiosError, isAxiosError } from 'axios';
+import axios, { AxiosError, CanceledError, isAxiosError } from 'axios';
 import axiosRetry, {
   isNetworkError,
   isSafeRequestError,
@@ -324,6 +324,63 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
               }
             )
             .catch(done.fail);
+        });
+      });
+
+      describe('when request is aborted', () => {
+        it('should clear timeout if started', (done) => {
+          const client = axios.create();
+          setupResponses(client, [
+            () => nock('http://example.com').get('/test').reply(429),
+            () => nock('http://example.com').get('/test').reply(429)
+          ]);
+          axiosRetry(client, {
+            retries: 1,
+            retryCondition: () => true,
+            retryDelay: () => 10000
+          });
+          const abortController = new AbortController();
+          client
+            .get('http://example.com/test', { signal: abortController.signal })
+            .then(
+              () => done.fail(),
+              (error) => {
+                expect(error).toBeInstanceOf(CanceledError);
+                expect(new Date().getTime() - timeStart).toBeLessThan(300);
+                done();
+              }
+            )
+            .catch(done.fail);
+          setTimeout(() => abortController.abort(), 200);
+          const timeStart = new Date().getTime();
+        });
+
+        it('should not start a timeout if not started yet', (done) => {
+          const client = axios.create();
+          setupResponses(client, [
+            () => nock('http://example.com').get('/test').reply(429),
+            () => nock('http://example.com').get('/test').reply(429)
+          ]);
+          axiosRetry(client, {
+            retries: 1,
+            retryCondition: () => true,
+            retryDelay: () => 10000,
+            onRetry: async () => new Promise((resolve) => setTimeout(resolve, 100))
+          });
+          const abortController = new AbortController();
+          client
+            .get('http://example.com/test', { signal: abortController.signal })
+            .then(
+              () => done.fail(),
+              (error) => {
+                expect(error).toBeInstanceOf(CanceledError);
+                expect(new Date().getTime() - timeStart).toBeLessThan(300);
+                done();
+              }
+            )
+            .catch(done.fail);
+          setTimeout(() => abortController.abort(), 50);
+          const timeStart = new Date().getTime();
         });
       });
     });
