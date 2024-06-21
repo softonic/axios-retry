@@ -382,6 +382,34 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
           setTimeout(() => abortController.abort(), 50);
           const timeStart = new Date().getTime();
         });
+
+        it('should cancel old requests', (done) => {
+          const client = axios.create();
+          setupResponses(client, [
+            () => nock('http://example.com').get('/test').delay(100).reply(429),
+            () => nock('http://example.com').get('/test').delay(100).reply(429),
+            () => nock('http://example.com').get('/test').delay(100).reply(429)
+          ]);
+          axiosRetry(client, {
+            retries: 2,
+            retryCondition: () => true,
+            retryDelay: () => 0
+          });
+          const abortController = new AbortController();
+          client
+            .get('http://example.com/test', { signal: abortController.signal })
+            .then(
+              () => done.fail(),
+              (error) => {
+                expect(error).toBeInstanceOf(CanceledError);
+                expect(new Date().getTime() - timeStart).toBeLessThan(300);
+                done();
+              }
+            )
+            .catch(done.fail);
+          setTimeout(() => abortController.abort(), 250);
+          const timeStart = new Date().getTime();
+        });
       });
     });
 

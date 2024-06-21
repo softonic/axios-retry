@@ -255,17 +255,19 @@ async function handleRetry(
   if (config.signal?.aborted) {
     return Promise.resolve(axiosInstance(config));
   }
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => resolve(axiosInstance(config)), delay);
+  return new Promise((resolve) => {
+    const abortListener = () => {
+      clearTimeout(timeout);
+      resolve(axiosInstance(config));
+    };
+    const timeout = setTimeout(() => {
+      resolve(axiosInstance(config));
+      if (config.signal?.removeEventListener) {
+        config.signal.removeEventListener('abort', abortListener);
+      }
+    }, delay);
     if (config.signal?.addEventListener) {
-      config.signal.addEventListener(
-        'abort',
-        () => {
-          clearTimeout(timeout);
-          resolve(axiosInstance(config));
-        },
-        { once: true }
-      );
+      config.signal.addEventListener('abort', abortListener, { once: true });
     }
   });
 }
