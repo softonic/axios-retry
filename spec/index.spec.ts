@@ -532,62 +532,6 @@ describe('axiosRetry(axios, { validateResponse })', () => {
     });
   });
 
-  describe('when requests are made', () => {
-    it('should be that lastRequestTime is accurate', (done) => {
-      const client = axios.create();
-      setupResponses(client, [
-        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
-        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
-        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
-        () => nock('http://example.com').get('/test').reply(200, 'It worked!')
-      ]);
-
-      function getLastRequestTime(config?: InternalAxiosRequestConfig<any>) {
-        const lastRequestTime = config?.['axios-retry']?.lastRequestTime;
-
-        expect(lastRequestTime).toBeInstanceOf(Number);
-        return lastRequestTime as number;
-      }
-
-      const lastRequestTimes: number[] = [];
-      const DELAY = 500;
-      axiosRetry(client, {
-        retries: 3,
-        retryDelay: () => DELAY,
-        shouldResetTimeout: true,
-        onRetry(_retryCount, error, _requestConfig) {
-          const lastRequestTime = getLastRequestTime(error.config);
-          lastRequestTimes.push(lastRequestTime);
-        }
-      });
-
-      const startTime = Date.now();
-      client
-        .get('http://example.com/test')
-        .then((response) => {
-          const lastRequestTime = getLastRequestTime(response.config);
-          lastRequestTimes.push(lastRequestTime);
-
-          expect(lastRequestTimes.length).toBe(4);
-
-          const [a, b, c, d] = lastRequestTimes;
-
-          expect(a - startTime).toBeGreaterThanOrEqual(0);
-          expect(b - a).toBeGreaterThanOrEqual(DELAY);
-          expect(c - b).toBeGreaterThanOrEqual(DELAY);
-          expect(d - c).toBeGreaterThanOrEqual(DELAY);
-
-          // check to ensure that the delays are not unreasonably long
-          expect(b - a).toBeLessThan(DELAY * 1.5);
-          expect(c - b).toBeLessThan(DELAY * 1.5);
-          expect(d - c).toBeLessThan(DELAY * 1.5);
-
-          done();
-        })
-        .catch(done.fail);
-    });
-  });
-
   describe('when validateResponse is supplied as request-specific configuration', () => {
     it('should use request-specific configuration instead', (done) => {
       const client = axios.create();
@@ -1220,5 +1164,61 @@ describe('axiosRetry interceptors', () => {
     expect(client.interceptors.request.handlers[0]).toBe(null);
     // @ts-ignore
     expect(client.interceptors.response.handlers[0]).toBe(null);
+  });
+});
+
+describe('when requests are made', () => {
+  it('should be that lastRequestTime is accurate', (done) => {
+    const client = axios.create();
+    setupResponses(client, [
+      () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+      () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+      () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+      () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+    ]);
+
+    function getLastRequestTime(config?: InternalAxiosRequestConfig<any>) {
+      const lastRequestTime = config?.['axios-retry']?.lastRequestTime;
+
+      expect(lastRequestTime).toBeInstanceOf(Number);
+      return lastRequestTime as number;
+    }
+
+    const lastRequestTimes: number[] = [];
+    const DELAY = 500;
+    axiosRetry(client, {
+      retries: 3,
+      retryDelay: () => DELAY,
+      shouldResetTimeout: true,
+      onRetry(_retryCount, error, _requestConfig) {
+        const lastRequestTime = getLastRequestTime(error.config);
+        lastRequestTimes.push(lastRequestTime);
+      }
+    });
+
+    const startTime = Date.now();
+    client
+      .get('http://example.com/test')
+      .then((response) => {
+        const lastRequestTime = getLastRequestTime(response.config);
+        lastRequestTimes.push(lastRequestTime);
+
+        expect(lastRequestTimes.length).toBe(4);
+
+        const [a, b, c, d] = lastRequestTimes;
+
+        expect(a - startTime).toBeGreaterThanOrEqual(0);
+        expect(b - a).toBeGreaterThanOrEqual(DELAY);
+        expect(c - b).toBeGreaterThanOrEqual(DELAY);
+        expect(d - c).toBeGreaterThanOrEqual(DELAY);
+
+        // check to ensure that the delays are not unreasonably long
+        expect(b - a).toBeLessThan(DELAY * 1.5);
+        expect(c - b).toBeLessThan(DELAY * 1.5);
+        expect(d - c).toBeLessThan(DELAY * 1.5);
+
+        done();
+      })
+      .catch(done.fail);
   });
 });
