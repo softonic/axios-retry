@@ -188,11 +188,14 @@ function getRequestOptions(
 
 function setCurrentState(
   config: AxiosRequestConfig,
-  defaultOptions: IAxiosRetryConfig | undefined
+  defaultOptions: IAxiosRetryConfig | undefined,
+  resetLastRequestTime = false
 ) {
   const currentState = getRequestOptions(config, defaultOptions || {});
   currentState.retryCount = currentState.retryCount || 0;
-  currentState.lastRequestTime = currentState.lastRequestTime || Date.now();
+  if (!currentState.lastRequestTime || resetLastRequestTime) {
+    currentState.lastRequestTime = Date.now();
+  }
   config[namespace] = currentState;
   return currentState as Required<IAxiosRetryConfigExtended>;
 }
@@ -282,7 +285,7 @@ async function handleMaxRetryTimesExceeded(
 
 const axiosRetry: AxiosRetry = (axiosInstance, defaultOptions) => {
   const requestInterceptorId = axiosInstance.interceptors.request.use((config) => {
-    setCurrentState(config, defaultOptions);
+    setCurrentState(config, defaultOptions, true);
     if (config[namespace]?.validateResponse) {
       // by setting this, all HTTP responses will be go through the error interceptor first
       config.validateStatus = () => false;
