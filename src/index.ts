@@ -81,6 +81,7 @@ export interface AxiosRetry {
   isIdempotentRequestError(error: AxiosError): boolean;
   isNetworkOrIdempotentRequestError(error: AxiosError): boolean;
   exponentialDelay(retryNumber?: number, error?: AxiosError, delayFactor?: number): number;
+  linearDelay(delayFactor?: number): (retryNumber: number, error: AxiosError | undefined) => number;
 }
 
 declare module 'axios' {
@@ -167,6 +168,20 @@ export function exponentialDelay(
   const delay = Math.max(calculatedDelay, retryAfter(error));
   const randomSum = delay * 0.2 * Math.random(); // 0-20% of the delay
   return delay + randomSum;
+}
+
+/**
+ * Linear delay
+ * @param {number | undefined} delayFactor - delay factor in milliseconds (default: 100)
+ * @returns {function} (retryNumber: number, error: AxiosError | undefined) => number
+ */
+export function linearDelay(
+  delayFactor: number | undefined = 100
+): (retryNumber: number, error: AxiosError | undefined) => number {
+  return (retryNumber = 0, error = undefined) => {
+    const delay = retryNumber * delayFactor;
+    return Math.max(delay, retryAfter(error));
+  };
 }
 
 export const DEFAULT_OPTIONS: Required<IAxiosRetryConfig> = {
@@ -322,5 +337,6 @@ axiosRetry.isSafeRequestError = isSafeRequestError;
 axiosRetry.isIdempotentRequestError = isIdempotentRequestError;
 axiosRetry.isNetworkOrIdempotentRequestError = isNetworkOrIdempotentRequestError;
 axiosRetry.exponentialDelay = exponentialDelay;
+axiosRetry.linearDelay = linearDelay;
 axiosRetry.isRetryableError = isRetryableError;
 export default axiosRetry;

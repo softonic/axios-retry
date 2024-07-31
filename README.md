@@ -29,6 +29,9 @@ axios.get('http://example.com/test') // The first request fails and the second r
 // Exponential back-off retry delay between requests
 axiosRetry(axios, { retryDelay: axiosRetry.exponentialDelay });
 
+// Liner retry delay between requests
+axiosRetry(axios, { retryDelay: axiosRetry.linearDelay() });
+
 // Custom retry delay
 axiosRetry(axios, { retryDelay: (retryCount) => {
   return retryCount * 1000;
@@ -64,7 +67,7 @@ client
 | retries | `Number` | `3` | The number of times to retry before failing. 1 = One retry after first failure |
 | retryCondition | `Function` | `isNetworkOrIdempotentRequestError` | A callback to further control if a request should be retried.  By default, it retries if it is a network error or a 5xx error on an idempotent request (GET, HEAD, OPTIONS, PUT or DELETE). |
 | shouldResetTimeout | `Boolean` | false | Defines if the timeout should be reset between retries |
-| retryDelay | `Function` | `function noDelay() { return 0; }` | A callback to further control the delay in milliseconds between retried requests. By default there is no delay between retries. Another option is exponentialDelay ([Exponential Backoff](https://developers.google.com/analytics/devguides/reporting/core/v3/errors#backoff)). The function is passed `retryCount` and `error`. |
+| retryDelay | `Function` | `function noDelay() { return 0; }` | A callback to further control the delay in milliseconds between retried requests. By default there is no delay between retries. Another option is exponentialDelay ([Exponential Backoff](https://developers.google.com/analytics/devguides/reporting/core/v3/errors#backoff)) or `linearDelay`. The function is passed `retryCount` and `error`. |
 | onRetry | `Function` | `function onRetry(retryCount, error, requestConfig) { return; }` | A callback to notify when a retry is about to occur. Useful for tracing and you can any async process for example refresh a token on 401. By default nothing will occur. The function is passed `retryCount`, `error`, and `requestConfig`. |
 | onMaxRetryTimesExceeded | `Function` | `function onMaxRetryTimesExceeded(error, retryCount) { return; }` | After all the retries are failed, this callback will be called with the last error before throwing the error. |
 | validateResponse | `Function \| null` | `null` | A callback to define whether a response should be resolved or rejected. If null is passed, it will fallback to the axios default (only 2xx status codes are resolved). |
