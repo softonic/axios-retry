@@ -8,7 +8,8 @@ import axiosRetry, {
   exponentialDelay,
   retryAfter,
   isRetryableError,
-  namespace
+  namespace,
+  linearDelay
 } from '../src/index';
 
 const NETWORK_ERROR = new AxiosError('Some connection error');
@@ -614,6 +615,53 @@ describe('axiosRetry(axios, { retries, retryDelay })', () => {
       }, done.fail);
     });
   });
+
+  describe('when linearDelay is supplied', () => {
+    it('should take more than 600 milliseconds with default delay and 4 retries', (done) => {
+      const client = axios.create();
+      setupResponses(client, [
+        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+        () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+      ]);
+      const timeStart = new Date().getTime();
+      axiosRetry(client, {
+        retries: 4,
+        retryCondition: () => true,
+        retryDelay: linearDelay()
+      });
+      client.get('http://example.com/test').then(() => {
+        // 100 + 200 + 300 = 600
+        expect(new Date().getTime() - timeStart).toBeGreaterThanOrEqual(600);
+        expect(new Date().getTime() - timeStart).toBeLessThan(700);
+
+        done();
+      }, done.fail);
+    });
+
+    it('should take more than 300 milliseconds with 50ms delay and 4 retries', (done) => {
+      const client = axios.create();
+      setupResponses(client, [
+        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+        () => nock('http://example.com').get('/test').replyWithError(NETWORK_ERROR),
+        () => nock('http://example.com').get('/test').reply(200, 'It worked!')
+      ]);
+      const timeStart = new Date().getTime();
+      axiosRetry(client, {
+        retries: 4,
+        retryCondition: () => true,
+        retryDelay: linearDelay(50)
+      });
+      client.get('http://example.com/test').then(() => {
+        // 50 + 100 + 150 = 300
+        expect(new Date().getTime() - timeStart).toBeGreaterThanOrEqual(300);
+        expect(new Date().getTime() - timeStart).toBeLessThan(400);
+        done();
+      }, done.fail);
+    });
+  });
 });
 
 describe('axiosRetry(axios, { retries, onRetry })', () => {
@@ -1048,6 +1096,33 @@ describe('exponentialDelay', () => {
       const time = exponentialDelay(retryNumber, undefined, 1000);
 
       expect(time >= min && time <= max).toBe(true);
+    }
+
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach(assertTime);
+  });
+});
+
+describe('linearDelay', () => {
+  it('should return liner retry delay', () => {
+    const linearDelayFunc = linearDelay();
+
+    function assertTime(retryNumber) {
+      const time = linearDelayFunc(retryNumber, undefined);
+
+      expect(time).toBe(100 * retryNumber);
+    }
+
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach(assertTime);
+  });
+
+  it('should change delay time when specifying delay factor', () => {
+    const delayFactor = 300;
+    const linearDelayFunc = linearDelay(delayFactor);
+
+    function assertTime(retryNumber) {
+      const time = linearDelayFunc(retryNumber, undefined);
+
+      expect(time).toBe(delayFactor * retryNumber);
     }
 
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach(assertTime);
