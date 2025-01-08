@@ -80,8 +80,8 @@ export interface AxiosRetry {
   isSafeRequestError(error: AxiosError): boolean;
   isIdempotentRequestError(error: AxiosError): boolean;
   isNetworkOrIdempotentRequestError(error: AxiosError): boolean;
-  exponentialDelay(retryNumber?: number, error?: AxiosError, delayFactor?: number): number;
-  linearDelay(delayFactor?: number): (retryNumber: number, error: AxiosError | undefined) => number;
+  exponentialDelay(retryCount?: number, error?: AxiosError, delayFactor?: number): number;
+  linearDelay(delayFactor?: number): (retryCount: number, error: AxiosError | undefined) => number;
 }
 
 declare module 'axios' {
@@ -155,16 +155,16 @@ export function retryAfter(error: AxiosError | undefined = undefined): number {
   return Math.max(0, retryAfterMs);
 }
 
-function noDelay(_retryNumber = 0, error: AxiosError | undefined = undefined) {
+function noDelay(_retryCount = 0, error: AxiosError | undefined = undefined) {
   return Math.max(0, retryAfter(error));
 }
 
 export function exponentialDelay(
-  retryNumber = 0,
+  retryCount = 0,
   error: AxiosError | undefined = undefined,
   delayFactor = 100
 ): number {
-  const calculatedDelay = 2 ** retryNumber * delayFactor;
+  const calculatedDelay = 2 ** retryCount * delayFactor;
   const delay = Math.max(calculatedDelay, retryAfter(error));
   const randomSum = delay * 0.2 * Math.random(); // 0-20% of the delay
   return delay + randomSum;
@@ -173,13 +173,13 @@ export function exponentialDelay(
 /**
  * Linear delay
  * @param {number | undefined} delayFactor - delay factor in milliseconds (default: 100)
- * @returns {function} (retryNumber: number, error: AxiosError | undefined) => number
+ * @returns {function} (retryCount: number, error: AxiosError | undefined) => number
  */
 export function linearDelay(
   delayFactor: number | undefined = 100
-): (retryNumber: number, error: AxiosError | undefined) => number {
-  return (retryNumber = 0, error = undefined) => {
-    const delay = retryNumber * delayFactor;
+): (retryCount: number, error: AxiosError | undefined) => number {
+  return (retryCount = 0, error = undefined) => {
+    const delay = retryCount * delayFactor;
     return Math.max(delay, retryAfter(error));
   };
 }

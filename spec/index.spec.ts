@@ -1078,10 +1078,10 @@ describe('isIdempotentRequestError(error)', () => {
 
 describe('exponentialDelay', () => {
   it('should return exponential retry delay', () => {
-    function assertTime(retryNumber) {
-      const min = Math.pow(2, retryNumber) * 100;
-      const max = Math.pow(2, retryNumber * 100) * 0.2;
-      const time = exponentialDelay(retryNumber);
+    function assertTime(retryCount) {
+      const min = Math.pow(2, retryCount) * 100;
+      const max = Math.pow(2, retryCount * 100) * 0.2;
+      const time = exponentialDelay(retryCount);
 
       expect(time >= min && time <= max).toBe(true);
     }
@@ -1090,10 +1090,10 @@ describe('exponentialDelay', () => {
   });
 
   it('should change delay time when specifying delay factor', () => {
-    function assertTime(retryNumber) {
-      const min = Math.pow(2, retryNumber) * 1000;
-      const max = Math.pow(2, retryNumber * 1000) * 0.2;
-      const time = exponentialDelay(retryNumber, undefined, 1000);
+    function assertTime(retryCount) {
+      const min = Math.pow(2, retryCount) * 1000;
+      const max = Math.pow(2, retryCount * 1000) * 0.2;
+      const time = exponentialDelay(retryCount, undefined, 1000);
 
       expect(time >= min && time <= max).toBe(true);
     }
@@ -1106,10 +1106,10 @@ describe('linearDelay', () => {
   it('should return liner retry delay', () => {
     const linearDelayFunc = linearDelay();
 
-    function assertTime(retryNumber) {
-      const time = linearDelayFunc(retryNumber, undefined);
+    function assertTime(retryCount) {
+      const time = linearDelayFunc(retryCount, undefined);
 
-      expect(time).toBe(100 * retryNumber);
+      expect(time).toBe(100 * retryCount);
     }
 
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach(assertTime);
@@ -1119,10 +1119,10 @@ describe('linearDelay', () => {
     const delayFactor = 300;
     const linearDelayFunc = linearDelay(delayFactor);
 
-    function assertTime(retryNumber) {
-      const time = linearDelayFunc(retryNumber, undefined);
+    function assertTime(retryCount) {
+      const time = linearDelayFunc(retryCount, undefined);
 
-      expect(time).toBe(delayFactor * retryNumber);
+      expect(time).toBe(delayFactor * retryCount);
     }
 
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach(assertTime);
