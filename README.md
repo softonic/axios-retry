@@ -32,7 +32,7 @@ axiosRetry(axios, { retryDelay: axiosRetry.noDelay });
 // Exponential back-off retry delay between requests
 axiosRetry(axios, { retryDelay: axiosRetry.exponentialDelay });
 
-// Liner retry delay between requests; note the different function signature
+// Linear retry delay between requests; note the different function signature
 axiosRetry(axios, { retryDelay: axiosRetry.linearDelay() });
 
 // Custom retry delay
