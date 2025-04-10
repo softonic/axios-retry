@@ -142,7 +142,8 @@ export function isNetworkOrIdempotentRequestError(error: AxiosError): boolean {
 }
 
 export function retryAfter(error: AxiosError | undefined = undefined): number {
-  const retryAfterHeader = error?.response?.headers['retry-after'];
+  // some mocking libraries dont have headers on error response - gracefully handle this
+  const retryAfterHeader = (error?.response?.headers || {})['retry-after'];
   if (!retryAfterHeader) {
     return 0;
   }
@@ -150,7 +151,8 @@ export function retryAfter(error: AxiosError | undefined = undefined): number {
   let retryAfterMs = (Number(retryAfterHeader) || 0) * 1000;
   // If the retry after header is a date, get the number of milliseconds until that date
   if (retryAfterMs === 0) {
-    retryAfterMs = (new Date(retryAfterHeader).valueOf() || 0) - Date.now();
+    // safe because (InvalidDate).valueOf() returns NaN (Nan || 0) -> 0
+    retryAfterMs = (new Date(retryAfterHeader as any).valueOf() || 0) - Date.now();
   }
   return Math.max(0, retryAfterMs);
 }
