@@ -1080,7 +1080,7 @@ describe('exponentialDelay', () => {
   it('should return exponential retry delay', () => {
     function assertTime(retryCount) {
       const min = Math.pow(2, retryCount) * 100;
-      const max = Math.pow(2, retryCount * 100) * 0.2;
+      const max = min * 1.2;
       const time = exponentialDelay(retryCount);
 
       expect(time >= min && time <= max).toBe(true);
@@ -1092,7 +1092,7 @@ describe('exponentialDelay', () => {
   it('should change delay time when specifying delay factor', () => {
     function assertTime(retryCount) {
       const min = Math.pow(2, retryCount) * 1000;
-      const max = Math.pow(2, retryCount * 1000) * 0.2;
+      const max = min * 1.2;
       const time = exponentialDelay(retryCount, undefined, 1000);
 
       expect(time >= min && time <= max).toBe(true);
