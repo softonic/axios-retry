@@ -45,6 +45,11 @@ export interface IAxiosRetryConfig {
    * the axios default (only 2xx status codes are resolved).
    */
   validateResponse?: ((response: AxiosResponse) => boolean) | null;
+
+  /**
+   * A callback to apply a custom jitter to the delay between retries.
+   */
+  jitter?: (delay: number) => number;
 }
 
 export interface IAxiosRetryConfigExtended extends IAxiosRetryConfig {
@@ -191,7 +196,8 @@ export const DEFAULT_OPTIONS: Required<IAxiosRetryConfig> = {
   shouldResetTimeout: false,
   onRetry: () => {},
   onMaxRetryTimesExceeded: () => {},
-  validateResponse: null
+  validateResponse: null,
+  jitter: (delay) => delay
 };
 
 function getRequestOptions(
@@ -255,8 +261,8 @@ async function handleRetry(
   config: AxiosRequestConfig
 ) {
   currentState.retryCount += 1;
-  const { retryDelay, shouldResetTimeout, onRetry } = currentState;
-  const delay = retryDelay(currentState.retryCount, error);
+  const { retryDelay, shouldResetTimeout, onRetry, jitter } = currentState;
+  const delay = jitter(retryDelay(currentState.retryCount, error));
   // Axios fails merging this configuration to the default configuration because it has an issue
   // with circular structures: https://github.com/mzabriskie/axios/issues/370
   fixConfig(axiosInstance, config);
