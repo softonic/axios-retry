@@ -269,7 +269,6 @@ async function handleRetry(
     config.timeout = timeout;
   }
   config.transformRequest = [(data) => data];
-  await onRetry(currentState.retryCount, error, config);
   if (config.signal?.aborted) {
     return Promise.resolve(axiosInstance(config));
   }
@@ -278,7 +277,8 @@ async function handleRetry(
       clearTimeout(timeout);
       resolve(axiosInstance(config));
     };
-    const timeout = setTimeout(() => {
+    const timeout = setTimeout(async () => {
+      await onRetry(currentState.retryCount, error, config);
       resolve(axiosInstance(config));
       if (config.signal?.removeEventListener) {
         config.signal.removeEventListener('abort', abortListener);
