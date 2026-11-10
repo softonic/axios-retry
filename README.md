@@ -1,5 +1,17 @@
 # axios-retry
 
+> [!WARNING]
+> **This project is no longer maintained.** The repository is archived and read-only: there will be no new releases, bug fixes or security updates, and issues and pull requests are closed.
+>
+> The latest release, `4.5.0`, stays on npm and keeps working. Axios has no built-in retry support, so if you need an actively maintained option, consider one of these community alternatives:
+>
+> - [retry-axios](https://github.com/JustinBeckwith/retry-axios): an axios interceptor, the closest replacement.
+> - [p-retry](https://github.com/sindresorhus/p-retry): retries any async function, so you can wrap your axios calls without a plugin.
+> - [ky](https://github.com/sindresorhus/ky): a fetch-based HTTP client with built-in retries.
+> - [got](https://github.com/sindresorhus/got): an HTTP client for Node.js with built-in retries.
+>
+> These projects are not affiliated with Softonic. Review them before you switch.
+
 [![Node.js CI](https://github.com/softonic/axios-retry/actions/workflows/node.js.yml/badge.svg)](https://github.com/softonic/axios-retry/actions/workflows/node.js.yml)
 
 Axios plugin that intercepts failed requests and retries them whenever possible.
